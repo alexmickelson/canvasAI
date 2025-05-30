@@ -37,12 +37,12 @@ services:
       context: .
       dockerfile: ./Dockerfile
     container_name: canvas_ai_api
-    entrypoint: sh
+    entrypoint: bash
     command: |
       -c "
         export PATH=/home/developer/.local/bin:${PATH}
         cd /app/api
-        uv run main.py
+        uv run fastapi dev
       "
     volumes:
       - ../:/app
