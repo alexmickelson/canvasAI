@@ -1,0 +1,62 @@
+services:
+  editor:
+    container_name: cavnas_ai_editor
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - ../:/app
+      - ~/.ssh:/home/developer/.ssh:ro
+    environment:
+      - DATABASE_URL=postgres://siteuser:postgresewvraer@db:5432/my_db
+    env_file:
+      - .env
+    command: |
+      bash -c '
+        tail -f /dev/null
+      '
+  app:
+    container_name: cavnas_ai_app
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - ../:/app
+    working_dir: /app
+    ports:
+      - 5173:5173
+    entrypoint: sh
+    command: |
+      -c "
+        cd /app/client
+        pnpm install
+        pnpm run dev --host
+      "
+  api:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: canvas_ai_api
+    entrypoint: sh
+    command: |
+      -c "
+        export PATH=/home/developer/.local/bin:${PATH}
+        cd /app/api
+        uv run main.py
+      "
+    volumes:
+      - ../:/app
+
+  db:
+    container_name: search_db
+    image: timescale/timescaledb-ha:pg17 
+    environment:
+      - POSTGRES_USER=siteuser
+      - POSTGRES_PASSWORD=postgresewvraer
+      - POSTGRES_DB=my_db
+    volumes:
+      # - db_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/1-schema.sql:ro
+
+volumes:
+  db_data:
