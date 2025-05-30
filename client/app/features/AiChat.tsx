@@ -3,6 +3,7 @@ import { marked } from "marked";
 import { AiChatProvider, useAiChat } from "./AiChatContext";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { z } from "zod";
+import { Message } from "./Message";
 
 export const AiChat = () => {
   return (
@@ -13,7 +14,9 @@ export const AiChat = () => {
           description: "Set the title of the chat",
           paramsSchema: z.object({ title: z.string() }),
           fn: (params: string) => {
-            const parsed = z.object({ title: z.string() }).parse(JSON.parse(params));
+            const parsed = z
+              .object({ title: z.string() })
+              .parse(JSON.parse(params));
             console.log("Setting title with params:", parsed.title);
             return `Title set to: ${parsed.title}`;
           },
@@ -42,21 +45,7 @@ const ChatDisplay = () => {
           .slice()
           .reverse()
           .map((msg: ChatCompletionMessageParam, index: number) => (
-            <p
-              key={index + "" + msg.content?.toString()}
-              className={`mb-2 ${
-                msg.role === "user" ? "text-right" : "text-left"
-              }`}
-            >
-              <strong className="block text-gray-400">{msg.role}:</strong>
-              <span className="block text-gray-200">
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: msg.content ? marked(msg.content.toString()) : "",
-                  }}
-                />
-              </span>
-            </p>
+            <Message key={index + "" + msg.content?.toString()} msg={msg} />
           ))}
       </div>
       <form
