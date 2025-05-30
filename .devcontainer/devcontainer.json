@@ -1,0 +1,21 @@
+{
+	"name": "Personal Site",
+	"dockerComposeFile": [
+		"docker-compose.yml"
+	],
+	"workspaceFolder": "/app",
+	"shutdownAction": "stopCompose",
+	"service": "editor",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"dbaeumer.vscode-eslint",
+				"dsznajder.es7-react-js-snippets",
+				"esbenp.prettier-vscode",
+				"bradlc.vscode-tailwindcss",
+				"humao.rest-client"
+			]
+		}
+	},
+	"remoteUser": "developer"
+}
