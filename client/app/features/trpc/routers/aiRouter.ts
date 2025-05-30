@@ -58,7 +58,8 @@ export const aiRouter = {
       });
 
       const stream = await openai.chat.completions.create({
-        model: "llama3.2",
+        model: "qwen3:14b",
+        // model: "llama3.2",
         messages: input.messages,
         stream: true,
         tool_choice: "auto",
