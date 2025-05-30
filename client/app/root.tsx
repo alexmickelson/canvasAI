@@ -10,6 +10,7 @@ import {
 import type { Route } from "./+types/root";
 import "./app.css";
 import { Toaster } from "react-hot-toast";
+import { TRPCReactProvider } from "./features/trpc/trpcClient";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -35,7 +36,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <Toaster />
-        {children}
+        <TRPCReactProvider>{children}</TRPCReactProvider>
         <ScrollRestoration />
         <Scripts />
       </body>

@@ -1,26 +1,11 @@
-import type { Route } from "../+types/root";
-
-export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
-  ];
-}
+import React from "react";
+import { WebSocketProvider } from "./websocket/websocketContext";
+import { AiChat } from "./AiChat";
 
 export default function Home() {
   return (
-    <>
-      <div
-        className="flex 
-          flex-col 
-          items-center 
-          justify-center 
-          min-h-screen 
-          space-y-4
-        "
-      >
-        hello
-      </div>
-    </>
+    <div className="flex flex-col items-center justify-center min-h-screen ">
+        <AiChat />
+    </div>
   );
 }
