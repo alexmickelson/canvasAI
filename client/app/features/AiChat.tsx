@@ -2,10 +2,24 @@ import { useState } from "react";
 import { marked } from "marked";
 import { AiChatProvider, useAiChat } from "./AiChatContext";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import { z } from "zod";
 
 export const AiChat = () => {
   return (
-    <AiChatProvider>
+    <AiChatProvider
+      tools={[
+        {
+          name: "set_title",
+          description: "Set the title of the chat",
+          paramsSchema: z.object({ title: z.string() }),
+          fn: (params: string) => {
+            const parsed = z.object({ title: z.string() }).parse(JSON.parse(params));
+            console.log("Setting title with params:", parsed.title);
+            return `Title set to: ${parsed.title}`;
+          },
+        },
+      ]}
+    >
       <ChatDisplay />
     </AiChatProvider>
   );

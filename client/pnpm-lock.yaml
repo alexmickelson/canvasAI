@@ -83,6 +83,9 @@ importers:
       zod:
         specifier: ^3.24.3
         version: 3.25.36
+      zod-to-json-schema:
+        specifier: ^3.24.5
+        version: 3.24.5(zod@3.25.36)
     devDependencies:
       '@react-router/dev':
         specifier: ^7.5.0
