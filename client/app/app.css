@@ -47,3 +47,21 @@ p {
     rounded 
     focus:outline-none;
 }
+
+
+pre,
+code {
+  @apply font-mono bg-gray-100 dark:bg-gray-900 text-sm rounded px-2 py-1;
+}
+
+pre {
+  @apply overflow-x-auto p-4 my-4;
+}
+
+code {
+  @apply text-pink-600 dark:text-pink-400;
+}
+
+pre code {
+  @apply bg-transparent p-0 text-inherit;
+}
