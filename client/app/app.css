@@ -51,7 +51,7 @@ p {
 
 pre,
 code {
-  @apply font-mono bg-gray-100 dark:bg-gray-900 text-sm rounded px-2 py-1;
+  @apply font-mono bg-gray-100 dark:bg-gray-800 text-sm rounded px-2 py-1;
 }
 
 pre {
