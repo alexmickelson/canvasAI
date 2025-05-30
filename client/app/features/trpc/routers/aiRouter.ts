@@ -48,6 +48,7 @@ export const aiRouter = {
     .input(
       z.object({
         messages: z.array(z.custom<ChatCompletionMessageParam>()),
+        tools: z.array(z.custom<OpenAI.Chat.Completions.ChatCompletionTool>()),
       })
     )
     .query(async function* ({ input }) {
@@ -60,16 +61,14 @@ export const aiRouter = {
         model: "llama3.2",
         messages: input.messages,
         stream: true,
+        tool_choice: "auto",
+        tools: [...input.tools], // could add other tools
       });
 
-      let textContent = "";
       for await (const chunk of stream) {
-        textContent += chunk.choices[0].delta.content || "";
+        console.log(chunk, chunk.choices[0].delta);
         yield chunk;
+
       }
-      // yield {
-      //   type: "final",
-      //   content: textContent,
-      // }
     }),
 } satisfies TRPCRouterRecord;
