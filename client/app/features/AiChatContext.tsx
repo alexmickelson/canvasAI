@@ -70,17 +70,18 @@ export const AiChatProvider = ({
         const result = await chosenTool.fn(params);
         console.log("Tool result:", result);
 
-        let latestMessage: ChatCompletionMessageParam = {
-          role: "assistant",
-          content: `Tool: ${chosenTool.name}\nResult: ${JSON.stringify(
-            result
-          )}`,
-        };
-        latestMessage.content += `\n\n`;
+        const newMessageContent = `Tool: ${
+          chosenTool.name
+        } Params: ${params} Result: ${JSON.stringify(result)}`;
 
         setMessages((prev) => {
           const updatedMessages = [...prev];
-          updatedMessages[updatedMessages.length - 1] = { ...latestMessage };
+          const lastIdx = updatedMessages.length - 1;
+          updatedMessages[lastIdx] = {
+            ...updatedMessages[lastIdx],
+            content:
+              (updatedMessages[lastIdx].content || "") + newMessageContent,
+          };
           return updatedMessages;
         });
 

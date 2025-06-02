@@ -45,7 +45,7 @@ const ChatDisplay = () => {
           .slice()
           .reverse()
           .map((msg: ChatCompletionMessageParam, index: number) => (
-            <Message key={index + "" + msg.content?.toString()} msg={msg} />
+            <Message key={index} msg={msg} />
           ))}
       </div>
       <form
@@ -54,13 +54,13 @@ const ChatDisplay = () => {
           e.preventDefault();
           await handleSend();
         }}
-      >
-        <input
-          type="text"
+            >
+        <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type your message..."
-          className="flex-1 border border-gray-700 rounded-lg p-2 mr-2 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 border border-gray-700 rounded-lg p-2 mr-2 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          rows={2}
         />
         <button
           type="submit"

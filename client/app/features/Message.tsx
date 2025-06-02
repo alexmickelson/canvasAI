@@ -8,11 +8,15 @@ export const Message = ({ msg }: { msg: ChatCompletionMessageParam }) => {
     setFirst(true);
   });
   return (
-    <p className={`mb-2 ${msg.role === "user" ? "text-right" : "text-left"}`}>
+    <div
+      className={`mb-2 min-h-16 flex-col ${
+        msg.role === "user" ? "text-right" : "text-left"
+      }`}
+    >
       {first && (
         <>
-          <strong className="block text-gray-400">{msg.role}:</strong>
-          <span className="block text-gray-200">
+          <div className="text-gray-400">{msg.role}:</div>
+          <div className="text-gray-200">
             {msg.content?.toString().startsWith("<think>") && (
               <details className="mb-2">
                 <summary className="cursor-pointer text-gray-400">
@@ -26,15 +30,15 @@ export const Message = ({ msg }: { msg: ChatCompletionMessageParam }) => {
                 ></div>
               </details>
             )}
-            <span
+            <div
               dangerouslySetInnerHTML={{
                 __html: getMessageContent(msg),
               }}
             />
-          </span>
+          </div>
         </>
       )}
-    </p>
+    </div>
   );
 };
 
