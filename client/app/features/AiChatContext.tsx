@@ -5,6 +5,7 @@ import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import type OpenAI from "openai";
 import type { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+import toast from "react-hot-toast";
 
 interface AiChatContextType {
   messages: ChatCompletionMessageParam[];
@@ -149,8 +150,17 @@ export const AiChatProvider = ({
       }
     };
 
-    const reason = handleStream();
-    console.log("Stream finished with reason:", reason);
+    handleStream()
+      .then((reason) => {
+        console.log("Stream finished with reason:", reason);
+      })
+      .catch((error) => {
+        const message = `Error during AI chat stream: ${
+          error instanceof Error ? error.message : "An unknown error occurred"
+        }`;
+        toast.error(message);
+        console.error(message);
+      });
   }, [messages]);
 
   const sendMessage = async (input: string) => {
