@@ -128,13 +128,7 @@ export const AiChatProvider = ({
 
       for await (const chunk of stream) {
         console.log(chunk);
-        // if (isCancelled) {
-        //   console.log("stream cancelled");
-        //   return;
-        // } else
-
         if (chunk.choices[0].finish_reason) {
-          // console.log("stream finished", chunk.choices[0].finish_reason);
           return chunk.choices[0].finish_reason;
         }
         if (chunk.choices[0].delta.tool_calls?.length) {
