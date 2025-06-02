@@ -34,7 +34,6 @@ export const AiChatProvider = ({
   const client = useTRPCClient();
 
   useEffect(() => {
-    console.log(messages);
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage) return;
 
@@ -68,7 +67,7 @@ export const AiChatProvider = ({
       }
       try {
         const result = await chosenTool.fn(params);
-        console.log("Tool result:", result);
+        // console.log("Tool result:", result);
 
         const newMessageContent = `Tool: ${
           chosenTool.name
@@ -127,12 +126,11 @@ export const AiChatProvider = ({
       setMessages((prev) => [...prev, latestMessage]);
 
       for await (const chunk of stream) {
-        console.log(chunk);
+        // console.log(chunk);
         if (chunk.choices[0].finish_reason) {
           return chunk.choices[0].finish_reason;
         }
         if (chunk.choices[0].delta.tool_calls?.length) {
-          console.log("tool call chunk", chunk);
           await handleToolCall(chunk);
         } else {
           latestMessage.content += chunk.choices[0].delta.content || "";

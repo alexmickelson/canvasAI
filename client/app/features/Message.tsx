@@ -7,6 +7,15 @@ export const Message = ({ msg }: { msg: ChatCompletionMessageParam }) => {
   useEffect(() => {
     setFirst(true);
   });
+  const content = msg.content?.toString() || "";
+  const toolMatch = content.match(
+    /Tool:\s*(.+?)\s+Params:\s*(.+?)\s+Result:\s*(.+)/s
+  );
+  const [, toolName, params, result] = toolMatch ?? ["", "", "", ""];
+
+  if (msg.role === "tool") {
+    return <></>;
+  }
   return (
     <div
       className={`mb-2 min-h-16 flex-col ${
@@ -30,11 +39,29 @@ export const Message = ({ msg }: { msg: ChatCompletionMessageParam }) => {
                 ></div>
               </details>
             )}
-            <div
-              dangerouslySetInnerHTML={{
-                __html: getMessageContent(msg),
-              }}
-            />
+
+            {toolMatch ? (
+              <div className="bg-gray-800 rounded p-2 my-2 text-left">
+                <div>
+                  <span className="font-semibold text-blue-400">Tool:</span>{" "}
+                  {toolName}
+                </div>
+                <div>
+                  <span className="font-semibold text-green-400">Params:</span>{" "}
+                  {params}
+                </div>
+                <div>
+                  <span className="font-semibold text-yellow-400">Result:</span>{" "}
+                  {result}
+                </div>
+              </div>
+            ) : (
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: getMessageContent(msg),
+                }}
+              />
+            )}
           </div>
         </>
       )}
