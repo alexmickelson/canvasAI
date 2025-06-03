@@ -6,11 +6,18 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-
+import SuperJSON from "superjson";
 import type { Route } from "./+types/root";
 import "./app.css";
 import { Toaster } from "react-hot-toast";
-import { TRPCReactProvider } from "./features/trpc/trpcClient";
+import { getQueryClient, TRPCReactProvider } from "./features/trpc/trpcClient";
+import { appRouter } from "./features/trpc/utils/main";
+import {
+  createTRPCContext,
+  createTRPCOptionsProxy,
+} from "@trpc/tanstack-react-query";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { cache } from "react";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -36,7 +43,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         <Toaster />
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <TRPCReactProvider>
+          <DataHydration>{children}</DataHydration>
+        </TRPCReactProvider>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -47,6 +56,27 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return <Outlet />;
 }
+async function DataHydration({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const queryClient = getQueryClient();
+  const helpers = createTRPCOptionsProxy({
+    router: appRouter,
+    ctx: createTRPCContext(),
+    queryClient,
+  });
+
+  queryClient.prefetchQuery(helpers.canvas.courses.queryOptions());
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      {children}
+    </HydrationBoundary>
+  );
+}
+
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";

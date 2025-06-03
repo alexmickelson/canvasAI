@@ -1,21 +1,22 @@
+DROP TABLE IF EXISTS submissions CASCADE;
+DROP TABLE IF EXISTS assignments CASCADE;
+DROP TABLE IF EXISTS courses CASCADE;
+
 CREATE TABLE courses (
-  id INT PRIMARY KEY,
+  id BIGINT PRIMARY KEY,
   name TEXT,
-  original_record JSONB -- Column to store the original record
+  original_record JSONB
 );
 
 CREATE TABLE assignments (
-  id INT PRIMARY KEY,
+  id BIGINT PRIMARY KEY,
   name TEXT,
-  course_id INT REFERENCES courses(id),
-  original_record JSONB -- Column to store the original record
+  course_id BIGINT REFERENCES courses(id),
+  original_record JSONB
 );
 
 CREATE TABLE submissions (
-  id INT PRIMARY KEY,
-  user_id INT,
-  assignment_id INT REFERENCES assignments(id),
-  submitted_at TIMESTAMP,
-  grade TEXT,
-  original_record JSONB -- Column to store the original record
+  id BIGINT PRIMARY KEY,
+  assignment_id BIGINT REFERENCES assignments(id),
+  original_record JSONB
 );

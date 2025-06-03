@@ -1,10 +1,22 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { useTRPC } from "../trpc/trpcClient";
 
 export const CanvasData = () => {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { data } = useSuspenseQuery(trpc.canvas.courses.queryOptions());
-  console.log(data);
+  const syncMutation = useMutation(
+    trpc.canvas.sync.mutationOptions({
+      onSuccess: () =>
+        queryClient.invalidateQueries({
+          queryKey: trpc.canvas.courses.pathKey(),
+        }),
+    })
+  );
   return (
     <div>
       {data.map((course) => (
@@ -14,6 +26,13 @@ export const CanvasData = () => {
           </div>
         </div>
       ))}
+      <button
+        className="mt-4 px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700 transition disabled:opacity-50"
+        onClick={() => syncMutation.mutate()}
+        disabled={syncMutation.isPending}
+      >
+        {syncMutation.isPending ? "Syncing..." : "Sync Canvas"}
+      </button>
     </div>
   );
 };

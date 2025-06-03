@@ -1,4 +1,6 @@
-import axios from "axios";
+import { db } from "../dbUtils";
+import { syncAssignmentsForCourse } from "./canvasAssignmentService";
+import { canvasApi, paginatedRequest } from "./canvasServiceUtils";
 
 export interface Term {
   id: number;
@@ -18,7 +20,7 @@ export interface CalendarLink {
   ics: string;
 }
 
-export interface Course {
+export interface CanvasCourse {
   id: number;
   sis_course_id?: string | null;
   uuid: string;
@@ -81,17 +83,42 @@ export interface Course {
   template?: boolean;
 }
 
-export async function getAllActiveCanvasCourses(): Promise<Course[]> {
-  const response = await axios.get(
-    "https://canvas.instructure.com/api/v1/courses",
+async function getAllActiveCanvasCourses(): Promise<CanvasCourse[]> {
+  const courses = await paginatedRequest<CanvasCourse[]>({
+    url: `${canvasApi}/courses`,
+    params: { enrollment_state: "active" },
+  });
+
+  return courses;
+}
+
+async function storeCourseInDatabase(course: CanvasCourse) {
+  await db.none(
+    `insert into courses (id, name, original_record)
+      values ($<id>, $<name>, $<json>)
+      on conflict (id) do nothing`,
     {
-      params: { enrollment_state: "active" },
-      headers: {
-        // Replace with your actual Canvas API token
-        Authorization: `Bearer ${process.env.CANVAS_TOKEN}`,
-      },
+      id: course.id,
+      name: course.name,
+      json: course,
     }
   );
+}
 
-  return response.data;
+export async function getAllCoursesFromDatabase(): Promise<CanvasCourse[]> {
+  const rows = await db.any(
+    `select original_record as json
+      from courses`
+  );
+  return rows.map((row) => row.json);
+}
+
+export async function syncCanvas() {
+  const courses = await getAllActiveCanvasCourses();
+  await Promise.all(
+    courses.map(async (c) => {
+      await storeCourseInDatabase(c);
+      await syncAssignmentsForCourse(c.id);
+    })
+  );
 }

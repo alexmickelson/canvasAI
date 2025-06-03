@@ -20,7 +20,7 @@ function makeQueryClient() {
       },
       mutations: {
         onError: (error: unknown) => {
-          console.log(error);
+          console.error(error);
           toast.error(
             `Error: ${
               error instanceof Error
@@ -33,7 +33,7 @@ function makeQueryClient() {
     },
     queryCache: new QueryCache({
       onError: (e: unknown) => {
-        console.log(e);
+        console.error(e);
         toast.error(
           `Error: ${
             e instanceof Error ? e.message : "An unknown error occurred"
@@ -45,7 +45,7 @@ function makeQueryClient() {
 }
 let browserQueryClient: QueryClient | undefined = undefined;
 
-function getQueryClient() {
+export function getQueryClient() {
   if (typeof window === "undefined") {
     return makeQueryClient();
   } else {

@@ -1,8 +1,12 @@
-import { getAllActiveCanvasCourses } from "~/services/canvasSyncService";
+import {
+  getAllCoursesFromDatabase,
+  syncCanvas,
+} from "~/services/canvas/canvasCourseService";
 import { publicProcedure } from "../utils/trpc";
 
 export const canvasRouter = {
-  courses: publicProcedure.query(async () => {
-    return await getAllActiveCanvasCourses();
+  sync: publicProcedure.mutation(async () => {
+    await syncCanvas();
   }),
+  courses: publicProcedure.query(getAllCoursesFromDatabase),
 };

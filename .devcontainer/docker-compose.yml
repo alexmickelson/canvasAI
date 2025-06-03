@@ -49,7 +49,7 @@ services:
       - ../:/app
 
   db:
-    container_name: search_db
+    container_name: canvas_ai_db
     image: timescale/timescaledb-ha:pg17
     environment:
       - POSTGRES_USER=siteuser
