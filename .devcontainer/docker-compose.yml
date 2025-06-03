@@ -25,6 +25,7 @@ services:
     working_dir: /app
     ports:
       - 5173:5173
+      - 24678:24678
     entrypoint: sh
     command: |
       -c "
@@ -49,7 +50,7 @@ services:
 
   db:
     container_name: search_db
-    image: timescale/timescaledb-ha:pg17 
+    image: timescale/timescaledb-ha:pg17
     environment:
       - POSTGRES_USER=siteuser
       - POSTGRES_PASSWORD=postgresewvraer
