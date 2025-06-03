@@ -60,13 +60,13 @@ const ChatDisplay: FC<{ title: string }> = ({ title }) => {
   };
 
   return (
-    <div className="flex flex-col items-center p-4 bg-gray-900 h-screen w-196">
+    <div className="flex flex-col items-center p-1 bg-gray-900 h-screen w-100">
       <h1 className="text-2xl font-bold mb-4">{title}</h1>
       <div
         ref={chatContainerRef}
         onScroll={handleScroll}
         className={
-          "w-full shadow-md rounded-lg p-4 mb-4 flex-1 " + " overflow-y-auto "
+          "w-full shadow-md rounded-lg p-2 mb-4 flex-1 " + " overflow-y-auto "
         }
       >
         <div className="flex flex-col-reverse">
