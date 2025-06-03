@@ -59,7 +59,7 @@ const ChatDisplay: FC<{ title: string }> = ({ title }) => {
   };
 
   return (
-    <div className="flex flex-col items-center p-1 bg-gray-900 h-screen w-100">
+    <div className="flex flex-col items-center p-1 bg-gray-900 h-full w-100 rounded-lg">
       <h1 className="text-2xl font-bold mb-4">{title}</h1>
       <div
         ref={chatContainerRef}

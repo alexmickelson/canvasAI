@@ -28,8 +28,15 @@ export const AiChatProvider = ({
   children: ReactNode;
   tools: AiTool[];
 }) => {
+  const systemPrompt = `You are an AI assistant, use the tools available to you when appropriate. 
+    Proactively assist your user
+  `
   const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([
-    { role: "system", content: "You are chatting with an AI.", name: "system" },
+    {
+      role: "system",
+      content: systemPrompt,
+      name: "system",
+    },
   ]);
   const client = useTRPCClient();
 
