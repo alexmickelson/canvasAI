@@ -6,7 +6,7 @@ export const Message = ({ msg }: { msg: ChatCompletionMessageParam }) => {
   const [first, setFirst] = useState(false); // client side hack
   useEffect(() => {
     setFirst(true);
-  });
+  }, []);
   const content = msg.content?.toString() || "";
   const toolMatch = content.match(
     /Tool:\s*(.+?)\s+Params:\s*(.+?)\s+Result:\s*(.+)/s

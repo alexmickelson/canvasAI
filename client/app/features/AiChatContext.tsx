@@ -18,7 +18,7 @@ export interface AiTool {
   name: string;
   description: string;
   paramsSchema: z.ZodTypeAny;
-  fn: (params: string) => any;
+  fn: (params: string) => unknown;
 }
 
 export const AiChatProvider = ({
@@ -118,7 +118,7 @@ export const AiChatProvider = ({
         tools: toolsSchema,
       });
 
-      let latestMessage: ChatCompletionMessageParam = {
+      const latestMessage: ChatCompletionMessageParam = {
         role: "assistant",
         content: "",
         name: "assistant",
@@ -154,7 +154,7 @@ export const AiChatProvider = ({
         toast.error(message);
         console.error(message);
       });
-  }, [messages]);
+  }, [client.ai.streamOpenAi, messages, tools]);
 
   const sendMessage = async (input: string) => {
     const userMessage: ChatCompletionMessageParam = {

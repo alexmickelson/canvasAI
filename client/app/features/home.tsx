@@ -1,5 +1,3 @@
-import React from "react";
-import { WebSocketProvider } from "./websocket/websocketContext";
 import { AiChat } from "./AiChat";
 
 export default function Home() {

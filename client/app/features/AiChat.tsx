@@ -1,8 +1,7 @@
-import { use, useState, type FC, useRef, useEffect } from "react";
-import { marked } from "marked";
+import { useState, type FC, useRef, useEffect } from "react";
 import { AiChatProvider, useAiChat } from "./AiChatContext";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
-import { set, z } from "zod";
+import { z } from "zod";
 import { Message } from "./Message";
 
 export const AiChat = () => {
@@ -78,6 +77,7 @@ const ChatDisplay: FC<{ title: string }> = ({ title }) => {
               <Message key={index} msg={msg} />
             ))}
         </div>
+
       </div>
       <form
         className="flex items-center w-full"

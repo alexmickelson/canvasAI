@@ -1,7 +1,7 @@
 import superjson from "superjson";
 
 import { ZodError } from "zod";
-import { initTRPC, TRPCError } from "@trpc/server";
+import { initTRPC } from "@trpc/server";
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
   const source = opts.headers.get('x-trpc-source') ?? 'unknown'

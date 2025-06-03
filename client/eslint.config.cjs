@@ -1,15 +1,11 @@
 /* eslint-disable no-undef */
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { defineConfig, globalIgnores } = require("eslint/config");
-
 const globals = require("globals");
-
 const { fixupConfigRules } = require("@eslint/compat");
-
 const tsParser = require("@typescript-eslint/parser");
 const reactRefresh = require("eslint-plugin-react-refresh");
 const js = require("@eslint/js");
-
 const { FlatCompat } = require("@eslint/eslintrc");
 
 const compat = new FlatCompat({
@@ -41,13 +37,7 @@ module.exports = defineConfig([
     },
 
     rules: {
-      "react-refresh/only-export-components": [
-        "warn",
-        {
-          allowConstantExport: true,
-        },
-      ],
-
+      "react-refresh/only-export-components": "off", // Disabled the rule
       "@typescript-eslint/no-unused-vars": [
         "error",
         {

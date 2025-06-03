@@ -20,7 +20,7 @@ const viteDevServer: ViteDevServer | undefined =
 const reactRouterHandler = createRequestHandler({
   build: viteDevServer
     ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
-    // @ts-ignore
+    // @ts-expect-error: dynamic import type mismatch, handled at runtime
     : await import("./build/server/index.js") ,
 });
 

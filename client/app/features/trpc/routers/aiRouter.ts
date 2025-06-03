@@ -4,11 +4,8 @@ import { z } from "zod";
 import { OpenAI } from "openai";
 import { ChatOllama } from "@langchain/ollama";
 import {
-  HumanMessage,
-  SystemMessage,
   BaseMessage,
 } from "@langchain/core/messages";
-import ollama from "ollama";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
 const ollamaUrl = "http://openwebui.bison-python.ts.net:11434/v1";
@@ -63,7 +60,7 @@ export const aiRouter = {
         messages: input.messages,
         stream: true,
         tool_choice: "auto",
-        tools: [...input.tools], // could add other tools
+        tools: [...input.tools], // could add other tools for server only
       });
 
       for await (const chunk of stream) {
