@@ -6,7 +6,6 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
-import SuperJSON from "superjson";
 import type { Route } from "./+types/root";
 import "./app.css";
 import { Toaster } from "react-hot-toast";
@@ -17,7 +16,6 @@ import {
   createTRPCOptionsProxy,
 } from "@trpc/tanstack-react-query";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { cache } from "react";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -76,7 +74,6 @@ async function DataHydration({
     </HydrationBoundary>
   );
 }
-
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
   let message = "Oops!";
