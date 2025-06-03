@@ -1,4 +1,4 @@
-import { use, useState, type FC } from "react";
+import { use, useState, type FC, useRef, useEffect } from "react";
 import { marked } from "marked";
 import { AiChatProvider, useAiChat } from "./AiChatContext";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
@@ -33,6 +33,26 @@ export const AiChat = () => {
 const ChatDisplay: FC<{ title: string }> = ({ title }) => {
   const [input, setInput] = useState("");
   const { messages, sendMessage } = useAiChat();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
+
+  const handleScroll = () => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+
+    const isAtBottom =
+      container.scrollHeight - container.scrollTop <=
+      container.clientHeight + 50;
+
+    setIsAutoScrollEnabled(isAtBottom);
+  };
+
+  useEffect(() => {
+    if (isAutoScrollEnabled) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isAutoScrollEnabled]);
 
   const handleSend = async () => {
     await sendMessage(input);
@@ -42,13 +62,22 @@ const ChatDisplay: FC<{ title: string }> = ({ title }) => {
   return (
     <div className="flex flex-col items-center p-4 bg-gray-900 h-screen w-196">
       <h1 className="text-2xl font-bold mb-4">{title}</h1>
-      <div className="w-full shadow-md rounded-lg p-4 mb-4 overflow-auto flex-1 flex flex-col-reverse">
-        {messages
-          .slice()
-          .reverse()
-          .map((msg: ChatCompletionMessageParam, index: number) => (
-            <Message key={index} msg={msg} />
-          ))}
+      <div
+        ref={chatContainerRef}
+        onScroll={handleScroll}
+        className={
+          "w-full shadow-md rounded-lg p-4 mb-4 flex-1 " + " overflow-y-auto "
+        }
+      >
+        <div className="flex flex-col-reverse">
+          <div ref={messagesEndRef} />
+          {messages
+            .slice()
+            .reverse()
+            .map((msg: ChatCompletionMessageParam, index: number) => (
+              <Message key={index} msg={msg} />
+            ))}
+        </div>
       </div>
       <form
         className="flex items-center w-full"
@@ -63,10 +92,26 @@ const ChatDisplay: FC<{ title: string }> = ({ title }) => {
           placeholder="Type your message..."
           className="flex-1 border border-gray-700 rounded-lg p-2 mr-2 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           rows={2}
-          onKeyDown={async (e) => {
-            if (e.key === "Enter" && (e.shiftKey || e.ctrlKey)) {
-              e.preventDefault();
-              await handleSend();
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              const textarea = e.target as HTMLTextAreaElement;
+              if (e.shiftKey) {
+                e.preventDefault();
+                const cursorPosition = textarea.selectionStart;
+                const newValue =
+                  input.slice(0, cursorPosition) +
+                  "\n" +
+                  input.slice(cursorPosition);
+                setInput(newValue);
+
+                // Preserve cursor position after inserting newline
+                textarea.value = newValue;
+                textarea.selectionStart = textarea.selectionEnd =
+                  cursorPosition + 1;
+              } else {
+                e.preventDefault();
+                handleSend();
+              }
             }
           }}
         />

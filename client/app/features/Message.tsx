@@ -1,6 +1,6 @@
 import { marked } from "marked";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FC } from "react";
 
 export const Message = ({ msg }: { msg: ChatCompletionMessageParam }) => {
   const [first, setFirst] = useState(false); // client side hack
@@ -18,7 +18,7 @@ export const Message = ({ msg }: { msg: ChatCompletionMessageParam }) => {
   }
   return (
     <div
-      className={`mb-2 min-h-16 flex-col ${
+      className={`mb-2 min-h-16 ${
         msg.role === "user" ? "text-right" : "text-left"
       }`}
     >
@@ -30,11 +30,12 @@ export const Message = ({ msg }: { msg: ChatCompletionMessageParam }) => {
               <details className="mb-2">
                 <summary className="cursor-pointer text-gray-400">
                   Thoughts
+                  <ThinkingSpinner content={msg.content?.toString()} />
                 </summary>
                 <div
                   className="pl-4 text-gray-400"
                   dangerouslySetInnerHTML={{
-                    __html: marked(msg.content.toString()),
+                    __html: marked(msg.content.toString().split("</think>")[0]),
                   }}
                 ></div>
               </details>
@@ -66,6 +67,15 @@ export const Message = ({ msg }: { msg: ChatCompletionMessageParam }) => {
         </>
       )}
     </div>
+  );
+};
+
+const ThinkingSpinner: FC<{ content: string }> = ({ content }) => {
+  if (content.includes("</think>")) return <></>;
+  return (
+    <span className="ml-2 align-middle">
+      <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+    </span>
   );
 };
 

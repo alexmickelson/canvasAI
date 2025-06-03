@@ -1,9 +1,14 @@
 import { createRequestHandler } from "@react-router/express";
 import compression from "compression";
-import express from "express";
+import express, {
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import morgan from "morgan";
+import type { ViteDevServer } from "vite";
 
-const viteDevServer =
+const viteDevServer: ViteDevServer | undefined =
   process.env.NODE_ENV === "production"
     ? undefined
     : await import("vite").then((vite) =>
@@ -15,7 +20,8 @@ const viteDevServer =
 const reactRouterHandler = createRequestHandler({
   build: viteDevServer
     ? () => viteDevServer.ssrLoadModule("virtual:react-router/server-build")
-    : await import("./build/server/index.js"),
+    // @ts-ignore
+    : await import("./build/server/index.js") ,
 });
 
 const app = express();
@@ -35,9 +41,11 @@ if (viteDevServer) {
 app.use(express.static("build/client", { maxAge: "1h" }));
 app.use(morgan("tiny"));
 
-app.all("*", reactRouterHandler);
+app.all("*", (req: Request, res: Response, next: NextFunction) =>
+  reactRouterHandler(req, res, next)
+);
 
-const port = process.env.PORT || 5173;
+const port: number = parseInt(process.env.PORT || "5173", 10);
 app.listen(port, () =>
   console.log(`Express server listening at http://localhost:${port}`)
 );

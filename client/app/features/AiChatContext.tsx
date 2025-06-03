@@ -113,7 +113,7 @@ export const AiChatProvider = ({
           },
         }));
 
-      const stream = await client.ai.streamOpenAi.query({
+      const stream = await client.ai.streamOpenAi.mutate({
         messages: messages,
         tools: toolsSchema,
       });

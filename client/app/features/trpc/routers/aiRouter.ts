@@ -51,7 +51,7 @@ export const aiRouter = {
         tools: z.array(z.custom<OpenAI.Chat.Completions.ChatCompletionTool>()),
       })
     )
-    .query(async function* ({ input }) {
+    .mutation(async function* ({ input }) { // hack to send data in body
       const openai = new OpenAI({
         baseURL: ollamaUrl,
         apiKey: "ollama",
@@ -67,7 +67,7 @@ export const aiRouter = {
       });
 
       for await (const chunk of stream) {
-        console.log(chunk, chunk.choices[0].delta);
+        // console.log(chunk, chunk.choices[0].delta);
         yield chunk;
 
       }
