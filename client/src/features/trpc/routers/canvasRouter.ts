@@ -4,7 +4,10 @@ import {
   getAllCoursesFromDatabase,
 } from "../../../services/canvas/canvasCourseService";
 import { publicProcedure } from "../utils/trpc";
-import { getAssignmentsFromDatabaseByCourseId } from "../../../services/canvas/canvasAssignmentService";
+import {
+  getAssignmentsFromDatabaseByCourseId,
+  syncAllSubmissionsForCourse,
+} from "../../../services/canvas/canvasAssignmentService";
 
 export const canvasRouter = {
   sync: publicProcedure.mutation(async () => {
@@ -15,4 +18,7 @@ export const canvasRouter = {
   assignments: publicProcedure
     .input(z.object({ courseId: z.number() }))
     .query(({ input }) => getAssignmentsFromDatabaseByCourseId(input.courseId)),
+  syncCourseSubmissions: publicProcedure
+    .input(z.object({ courseId: z.number() }))
+    .mutation(({ input }) => syncAllSubmissionsForCourse(input.courseId)),
 };

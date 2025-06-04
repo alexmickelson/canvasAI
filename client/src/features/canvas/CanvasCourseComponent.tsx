@@ -1,7 +1,7 @@
 import { useState, type FC } from "react";
 import type { CanvasCourse } from "../../services/canvas/canvasCourseService";
 import { useTRPC } from "../trpc/trpcClient";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import type { CanvasAssignment } from "../../services/canvas/canvasAssignmentService";
 
 export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
@@ -13,14 +13,32 @@ export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
     trpc.canvas.assignments.queryOptions({ courseId: course.id })
   );
 
+  const syncSubmissionsMutation = useMutation(
+    trpc.canvas.syncCourseSubmissions.mutationOptions()
+  );
+
   return (
     <>
       <div>
         <div>
-          {course.name} - {course.id}
-        </div>
-        <button onClick={() => setShowAssignments(!showAssignments)}>
+          {course.original_name} ({course.name})
+        </div> 
+        <button
+          className="m-3"
+          onClick={() => setShowAssignments(!showAssignments)}
+        >
           {showAssignments ? "Hide Assignments" : "Show Assignments"}
+        </button>
+        <button
+          className="m-3"
+          onClick={() =>
+            syncSubmissionsMutation.mutate({ courseId: course.id })
+          }
+          disabled={syncSubmissionsMutation.isPending}
+        >
+          {syncSubmissionsMutation.isPending
+            ? "Syncing..."
+            : "Sync Submissions"}
         </button>
         {showAssignments && (
           <>

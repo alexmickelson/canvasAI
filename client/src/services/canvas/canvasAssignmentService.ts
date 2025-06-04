@@ -1,5 +1,6 @@
 import { db } from "../dbUtils";
 import { canvasApi, paginatedRequest } from "./canvasServiceUtils";
+import { syncSubmissionsForAssignment } from "./canvasSubmissionsService";
 
 export interface CanvasAssignment {
   id: number;
@@ -40,6 +41,7 @@ async function storeAssignmentInDatabase(assignment: CanvasAssignment) {
     }
   );
 }
+
 export async function getAssignmentsFromDatabaseByCourseId(
   courseId: number
 ): Promise<CanvasAssignment[]> {
@@ -60,3 +62,12 @@ export async function syncAssignmentsForCourse(courseId: number) {
     })
   );
 }
+
+export const syncAllSubmissionsForCourse = async (courseId: number) => {
+  const assignments = await getAllAssignmentsInCourse(courseId);
+  await Promise.all(
+    assignments.map(async (assignment) => {
+      await syncSubmissionsForAssignment(assignment.id);
+    })
+  );
+};
