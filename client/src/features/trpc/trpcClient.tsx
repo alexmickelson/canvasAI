@@ -1,5 +1,4 @@
 import SuperJSON from "superjson";
-
 import { useState } from "react";
 import {
   QueryClient,
@@ -60,12 +59,7 @@ const getBaseUrl = () => {
   return `http://localhost:${process.env.PORT ?? 5173}`;
 };
 
-const links = [
-  // loggerLink({
-  //   enabled: (op) =>
-  //     process.env.NODE_ENV === "development" ||
-  //     (op.direction === "down" && op.result instanceof Error),
-  // }),
+export const trpcLinks = [
   httpBatchStreamLink({
     transformer: SuperJSON,
     maxURLLength: 10_000,
@@ -85,7 +79,7 @@ export function TRPCReactProvider({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient();
   const [trpcClient] = useState(() =>
     createTRPCClient<AppRouter>({
-      links,
+      links: trpcLinks,
     })
   );
 

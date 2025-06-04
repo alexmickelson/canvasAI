@@ -5,7 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { useTRPC } from "../trpc/trpcClient";
 
-export const CanvasData = () => {
+export default function CanvasData() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { data } = useSuspenseQuery(trpc.canvas.courses.queryOptions());
@@ -28,11 +28,14 @@ export const CanvasData = () => {
       ))}
       <button
         className="mt-4 px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700 transition disabled:opacity-50"
-        onClick={() => syncMutation.mutate()}
+        onClick={() => {
+          console.log("click");
+          syncMutation.mutate();
+        }}
         disabled={syncMutation.isPending}
       >
         {syncMutation.isPending ? "Syncing..." : "Sync Canvas"}
       </button>
     </div>
   );
-};
+}
