@@ -2,6 +2,8 @@
 
 import type { AxiosResponseHeaders, RawAxiosResponseHeaders } from "axios";
 import { axiosClient } from "../axiosUtils";
+import dotenv from "dotenv";
+dotenv.config();
 
 export const baseCanvasUrl = "https://snow.instructure.com";
 export const canvasApi = baseCanvasUrl + "/api/v1";

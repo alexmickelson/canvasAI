@@ -1,3 +1,4 @@
+
 import compression from "compression";
 import express from "express";
 import { appRouter } from "../features/trpc/utils/main";
@@ -16,5 +17,5 @@ app.use(compression());
 
 const port: number = parseInt(process.env.PORT || "3000", 10);
 app.listen(port, () =>
-  console.log(`Express server listening at http://localhost:${port}`)
+  console.log(`Express server listening at port ${port}`)
 );
