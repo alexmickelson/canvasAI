@@ -45,13 +45,13 @@ export async function paginatedRequest<T extends unknown[]>({
   params = {},
 }: {
   url: string;
-  params?: { [key: string]: string };
+  params?: { [key: string]: string | number | boolean };
 }): Promise<T> {
   let requestCount = 1;
   const url = new URL(urlParam);
   url.searchParams.set("per_page", "100");
   Object.entries(params ?? {}).forEach(([key, value]) => {
-    url.searchParams.set(key, value);
+    url.searchParams.set(key, value.toString());
   });
 
   const { data: firstData, headers: firstHeaders } = await axiosClient.get<T>(
