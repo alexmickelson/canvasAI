@@ -31,22 +31,37 @@ services:
       -c "
         cd /app/client
         pnpm install
-        pnpm run dev --host
+        pnpm run dev
       "
-  api:
+  trpc:
+    container_name: cavnas_ai_trpc
     build:
       context: .
       dockerfile: ./Dockerfile
-    container_name: canvas_ai_api
-    entrypoint: bash
-    command: |
-      -c "
-        export PATH=/home/developer/.local/bin:${PATH}
-        cd /app/api
-        uv run fastapi dev
-      "
     volumes:
       - ../:/app
+    working_dir: /app
+    entrypoint: sh
+    command: |
+      -c "
+        cd /app/client
+        pnpm install
+        pnpm run server
+      "
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: ./Dockerfile
+  #   container_name: canvas_ai_api
+  #   entrypoint: bash
+  #   command: |
+  #     -c "
+  #       export PATH=/home/developer/.local/bin:${PATH}
+  #       cd /app/api
+  #       uv run fastapi dev
+  #     "
+  #   volumes:
+  #     - ../:/app
 
   db:
     container_name: canvas_ai_db

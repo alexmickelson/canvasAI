@@ -52,18 +52,11 @@ export function getQueryClient() {
     return browserQueryClient;
   }
 }
-
-const getBaseUrl = () => {
-  if (typeof window !== "undefined") return window.location.origin;
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return `http://localhost:${process.env.PORT ?? 5173}`;
-};
-
 export const trpcLinks = [
   httpBatchStreamLink({
     transformer: SuperJSON,
     maxURLLength: 10_000,
-    url: getBaseUrl() + "/trpc",
+    url: "/trpc",
     headers() {
       const headers = new Headers();
       headers.set("x-trpc-source", "react");
