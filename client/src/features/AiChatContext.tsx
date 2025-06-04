@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import { useTRPCClient } from "./trpc/trpcClient";
+import { useTRPCClient } from "../trpc/trpcClient";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import type OpenAI from "openai";
 import type { z } from "zod";
@@ -30,7 +30,7 @@ export const AiChatProvider = ({
 }) => {
   const systemPrompt = `You are an AI assistant, use the tools available to you when appropriate. 
     Proactively assist your user
-  `
+  `;
   const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([
     {
       role: "system",

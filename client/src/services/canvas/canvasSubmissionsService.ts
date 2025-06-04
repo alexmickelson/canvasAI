@@ -15,10 +15,12 @@ export interface CanvasSubmission {
 }
 
 async function getAllSubmissionsForAssignment(
-  assignmentId: number
+  assignmentId: number,
+  courseId: number
 ): Promise<CanvasSubmission[]> {
   return paginatedRequest<CanvasSubmission[]>({
-    url: canvasApi + `/course/${courseId}/assignments/${assignmentId}/submissions`,
+    url:
+      canvasApi + `/courses/${courseId}/assignments/${assignmentId}/submissions`,
   });
 }
 
@@ -48,8 +50,8 @@ export async function getSubmissionsFromDatabaseByAssignmentId(
   return rows.map((row) => row.json);
 }
 
-export async function syncSubmissionsForAssignment(assignmentId: number) {
-  const submissions = await getAllSubmissionsForAssignment(assignmentId);
+export async function syncSubmissionsForAssignment(assignmentId: number, courseId: number) {
+  const submissions = await getAllSubmissionsForAssignment(assignmentId, courseId);
   await Promise.all(
     submissions.map(async (submission) => {
       await storeSubmissionInDatabase(submission);

@@ -1,0 +1,59 @@
+import { db } from "../dbUtils";
+import { canvasApi, paginatedRequest } from "./canvasServiceUtils";
+
+export interface CanvasModule {
+  id: number;
+  name: string;
+  position: number;
+  unlock_at?: string;
+  require_sequential_progress: boolean;
+  publish_final_grade: boolean;
+  published: boolean;
+}
+
+async function getAllModulesInCourse(
+  courseId: number
+): Promise<CanvasModule[]> {
+  console.log("getting modules for course", courseId);
+  return paginatedRequest<CanvasModule[]>({
+    url: canvasApi + `/courses/${courseId}/modules`,
+  });
+}
+
+export async function storeModuleInDatabase(module: CanvasModule, courseId: number) {
+  console.log("storing module in database", module.name, courseId);
+  await db.none(
+    `insert into modules (id, name, course_id, original_record)
+      values ($<id>, $<name>, $<course_id>, $<json>)
+      on conflict (id) do nothing`,
+    {
+      id: module.id,
+      name: module.name,
+      course_id: courseId,
+      json: module,
+    }
+  );
+}
+
+export async function getModulesFromDatabase(
+  courseId: number
+): Promise<CanvasModule[]> {
+  const rows = await db.any<{ json: CanvasModule }>(
+    `select original_record as json
+     from modules
+     where course_id = $<courseId>
+     order by id`,
+    { courseId }
+  );
+  return rows.map((row) => row.json);
+}
+
+export async function syncModulesForCourse(courseId: number) {
+  const modules = await getAllModulesInCourse(courseId);
+  console.log("got modules from canvas", modules.length);
+  await Promise.all(
+    modules.map(async (module) => {
+      await storeModuleInDatabase(module, courseId);
+    })
+  );
+}

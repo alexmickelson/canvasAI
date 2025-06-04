@@ -1,5 +1,5 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useTRPC } from "../trpc/trpcClient";
+import { useTRPC } from "../../trpc/trpcClient";
 import { CanvasCourseComponent } from "./CanvasCourseComponent";
 import type { CanvasTerm } from "../../services/canvas/canvasCourseService";
 

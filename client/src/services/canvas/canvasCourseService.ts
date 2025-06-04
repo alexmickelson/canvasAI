@@ -3,6 +3,7 @@ import { syncAssignmentsForCourse } from "./canvasAssignmentService";
 import { canvasApi, paginatedRequest } from "./canvasServiceUtils";
 import { z } from "zod";
 import { syncTerms } from "./canvasTermService";
+import { syncModulesForCourse } from "./canvasModuleService";
 
 export const CanvasTermSchema = z.object({
   id: z.number(),
@@ -119,13 +120,14 @@ export async function getAllCoursesFromDatabase(): Promise<CanvasCourse[]> {
   return rows.map((row) => row.json);
 }
 
-export async function syncCourseInTerm() {
+export async function syncAllCourses() {
   const courses = await getAllActiveCanvasCourses();
   await syncTerms(courses);
   await Promise.all(
     courses.map(async (c) => {
       await storeCourseInDatabase(c);
       await syncAssignmentsForCourse(c.id);
+      await syncModulesForCourse(c.id);
     })
   );
 }

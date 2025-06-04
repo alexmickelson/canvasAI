@@ -7,9 +7,9 @@ import {
 } from "@tanstack/react-query";
 import { createTRPCClient, httpBatchStreamLink } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
-
 import type { AppRouter } from "./utils/main";
 import { toast } from "react-hot-toast";
+
 
 function makeQueryClient() {
   return new QueryClient({
@@ -19,7 +19,7 @@ function makeQueryClient() {
       },
       mutations: {
         onError: (error: unknown) => {
-          console.error(error);
+          console.error("query client mutation error", error);
           toast.error(
             `Error: ${
               error instanceof Error
@@ -32,7 +32,7 @@ function makeQueryClient() {
     },
     queryCache: new QueryCache({
       onError: (e: unknown) => {
-        console.error(e);
+        console.error("query client error", e);
         toast.error(
           `Error: ${
             e instanceof Error ? e.message : "An unknown error occurred"
@@ -62,11 +62,11 @@ export const trpcLinks = [
       headers.set("x-trpc-source", "react");
       return headers;
     },
-    
   }),
 ];
 
-export const { TRPCProvider, useTRPC, useTRPCClient } = createTRPCContext<AppRouter>();
+export const { TRPCProvider, useTRPC, useTRPCClient } =
+  createTRPCContext<AppRouter>();
 
 export function TRPCReactProvider({ children }: { children: React.ReactNode }) {
   const queryClient = getQueryClient();

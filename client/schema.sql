@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS submissions CASCADE;
 DROP TABLE IF EXISTS assignments CASCADE;
 DROP TABLE IF EXISTS courses CASCADE;
 DROP TABLE IF EXISTS terms CASCADE;
+DROP TABLE IF EXISTS modules CASCADE;
 
 CREATE TABLE terms (
   id BIGINT PRIMARY KEY,
@@ -21,11 +22,20 @@ CREATE TABLE assignments (
   id BIGINT PRIMARY KEY,
   name TEXT,
   course_id BIGINT REFERENCES courses(id),
+  due_date TIMESTAMP,
   original_record JSONB
 );
 
 CREATE TABLE submissions (
   id BIGINT PRIMARY KEY,
+  user_id BIGINT,
   assignment_id BIGINT REFERENCES assignments(id),
+  original_record JSONB
+);
+
+CREATE TABLE modules (
+  id BIGINT PRIMARY KEY,
+  name TEXT,
+  course_id BIGINT REFERENCES courses(id),
   original_record JSONB
 );

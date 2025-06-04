@@ -3,7 +3,7 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { useTRPC } from "../trpc/trpcClient";
+import { useTRPC } from "../../trpc/trpcClient";
 import { CanvasTermComponent } from "./CanvasTermComponent";
 
 export default function CanvasData() {

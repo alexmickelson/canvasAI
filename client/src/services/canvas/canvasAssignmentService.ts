@@ -18,6 +18,7 @@ export interface CanvasAssignment {
   grading_standard_id?: number;
   published: boolean;
   muted: boolean;
+  context_module_id?: number;
 }
 
 async function getAllAssignmentsInCourse(
@@ -30,13 +31,14 @@ async function getAllAssignmentsInCourse(
 
 async function storeAssignmentInDatabase(assignment: CanvasAssignment) {
   await db.none(
-    `insert into assignments (id, name, course_id, original_record)
-      values ($<id>, $<name>, $<course_id>, $<json>)
+    `insert into assignments (id, name, course_id, due_date, original_record)
+      values ($<id>, $<name>, $<course_id>, $<due_date>, $<json>)
       on conflict (id) do nothing`,
     {
       id: assignment.id,
       name: assignment.name,
       course_id: assignment.course_id,
+      due_date: assignment.due_at ? new Date(assignment.due_at) : null,
       json: assignment,
     }
   );
@@ -48,7 +50,8 @@ export async function getAssignmentsFromDatabaseByCourseId(
   const rows = await db.any(
     `select original_record as json
       from assignments
-      where course_id = $<courseId>`,
+      where course_id = $<courseId>
+      order by due_date asc`,
     { courseId }
   );
   return rows.map((row) => row.json);
@@ -67,7 +70,7 @@ export const syncAllSubmissionsForCourse = async (courseId: number) => {
   const assignments = await getAllAssignmentsInCourse(courseId);
   await Promise.all(
     assignments.map(async (assignment) => {
-      await syncSubmissionsForAssignment(assignment.id);
+      await syncSubmissionsForAssignment(assignment.id, courseId);
     })
   );
 };

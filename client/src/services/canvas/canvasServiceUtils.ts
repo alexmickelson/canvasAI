@@ -1,5 +1,3 @@
-// services/canvasServiceUtils.ts
-
 import type { AxiosResponseHeaders, RawAxiosResponseHeaders } from "axios";
 import { axiosClient } from "../axiosUtils";
 import dotenv from "dotenv";
@@ -11,6 +9,20 @@ export const canvasRequestOptions = {
   headers: {
     Authorization: `Bearer ${process.env.CANVAS_TOKEN}`,
   },
+};
+
+const rateLimitRetryCount = 6;
+const rateLimitSleepInterval = 1000;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const isRateLimited = async (
+  headers: AxiosResponseHeaders | RawAxiosResponseHeaders
+): Promise<boolean> => {
+  const rateLimitRemaining = headers["x-rate-limit-remaining"];
+  return (
+    rateLimitRemaining !== undefined && parseInt(rateLimitRemaining, 10) === 0
+  );
 };
 
 const getNextUrl = (
@@ -30,15 +42,55 @@ const getNextUrl = (
   const nextLink = links.find((link) => link.includes('rel="next"'));
 
   if (!nextLink) {
-    // console.log(
-    //   "could not find next url in link header, reached end of pagination"
-    // );
     return undefined;
   }
 
   const nextUrl = nextLink.split(";")[0].trim().slice(1, -1);
   return nextUrl;
 };
+
+export async function rateLimitGet<T>(
+  url: string,
+  options: object,
+  maxRetries: number = rateLimitRetryCount,
+  sleepInterval: number = rateLimitSleepInterval,
+  retryCount: number = 0
+): Promise<{ data: T; headers: RawAxiosResponseHeaders }> {
+  try {
+    const response = await axiosClient.get<T>(url, options);
+    return { data: response.data, headers: response.headers };
+  } catch (error) {
+    const axiosError = error as Error & {
+      response?: { status: number; headers: RawAxiosResponseHeaders };
+    };
+
+    if (
+      axiosError.response &&
+      (await isRateLimited(axiosError.response.headers))
+    ) {
+      if (retryCount < maxRetries) {
+        console.info(
+          `Hit rate limit, retry count is ${retryCount} / ${maxRetries}, retrying`
+        );
+        await sleep(sleepInterval);
+        return rateLimitGet<T>(
+          url,
+          options,
+          maxRetries,
+          sleepInterval,
+          retryCount + 1
+        );
+      } else {
+        console.error(
+          `Rate limit exceeded after ${maxRetries} retries, aborting request`
+        );
+        throw error;
+      }
+    } else {
+      throw error; // Re-throw non-rate-limit errors
+    }
+  }
+}
 
 export async function paginatedRequest<T extends unknown[]>({
   url: urlParam,
@@ -54,24 +106,21 @@ export async function paginatedRequest<T extends unknown[]>({
     url.searchParams.set(key, value.toString());
   });
 
-  const { data: firstData, headers: firstHeaders } = await axiosClient.get<T>(
-    url.toString(),
-    canvasRequestOptions
-  );
-
-  let returnData = Array.isArray(firstData) ? [...firstData] : [firstData]; // terms come across as nested objects {enrolmentTerms: terms[]}
-  let nextUrl = getNextUrl(firstHeaders);
+  const returnData= [];
+  let nextUrl: string | undefined = url.toString();
 
   while (nextUrl) {
-    requestCount += 1;
-    const { data, headers } = await axiosClient.get<T>(
+    const { data, headers } = await rateLimitGet<T>(
       nextUrl,
       canvasRequestOptions
     );
+
     if (data) {
-      returnData = returnData.concat(Array.isArray(data) ? [...data] : [data]);
+      returnData.push(...data);
     }
+
     nextUrl = getNextUrl(headers);
+    requestCount += 1;
   }
 
   if (requestCount > 1) {
