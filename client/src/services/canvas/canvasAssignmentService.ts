@@ -33,7 +33,11 @@ async function storeAssignmentInDatabase(assignment: CanvasAssignment) {
   await db.none(
     `insert into assignments (id, name, course_id, due_date, original_record)
       values ($<id>, $<name>, $<course_id>, $<due_date>, $<json>)
-      on conflict (id) do nothing`,
+      on conflict (id) do update
+      set name = excluded.name,
+          course_id = excluded.course_id,
+          due_date = excluded.due_date,
+          original_record = excluded.original_record`,
     {
       id: assignment.id,
       name: assignment.name,

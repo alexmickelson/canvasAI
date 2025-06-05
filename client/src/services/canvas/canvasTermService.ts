@@ -5,7 +5,9 @@ async function storeTermInDatabase(term: CanvasTerm) {
   await db.none(
     `insert into terms (id, name, original_record)
       values ($<id>, $<name>, $<json>)
-      on conflict (id) do nothing`,
+      on conflict (id) do update
+      set name = excluded.name,
+          original_record = excluded.original_record`,
     {
       id: term.id,
       name: term.name,
@@ -28,7 +30,7 @@ export async function syncTerms(courses: CanvasCourse[]) {
 
   const terms = termIds
     .map((id) => courses.find((c) => c.enrollment_term_id === id && c.term))
-    .filter((c)=> c?.term)
+    .filter((c) => c?.term)
     .map((c) => c!.term!);
 
   await Promise.all(

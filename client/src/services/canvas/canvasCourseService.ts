@@ -102,7 +102,10 @@ async function storeCourseInDatabase(course: CanvasCourse) {
   await db.none(
     `insert into courses (id, name, term_id, original_record)
       values ($<id>, $<name>, $<term_id>, $<json>)
-      on conflict (id) do nothing`,
+      on conflict (id) do update
+      set name = excluded.name,
+          term_id = excluded.term_id,
+          original_record = excluded.original_record`,
     {
       id: course.id,
       name: course.name,

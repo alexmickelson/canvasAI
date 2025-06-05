@@ -1,14 +1,20 @@
 import { useState, type FC } from "react";
 import type { CanvasCourse } from "../../services/canvas/canvasCourseService";
 import { useTRPC } from "../../trpc/trpcClient";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
-import type { CanvasAssignment } from "../../services/canvas/canvasAssignmentService";
+import {
+  useMutation,
+  useSuspenseQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { SuspenseAndError } from "../../utils/SuspenseAndError";
+import { CanvasAssignmentComponent } from "../../services/canvas/CanvasAssignmentComponent";
 
 export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
   course,
 }) => {
   const [showAssignments, setShowAssignments] = useState(false);
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const { data: assignments } = useSuspenseQuery(
     trpc.canvas.assignments.queryOptions({ courseId: course.id })
   );
@@ -18,23 +24,29 @@ export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
   );
 
   const syncSubmissionsMutation = useMutation(
-    trpc.canvas.syncCourseSubmissions.mutationOptions()
+    trpc.canvas.syncCourseSubmissions.mutationOptions({
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: trpc.canvas.submissions.queryKey(),
+        });
+      },
+    })
   );
 
-  
-  const assignmentsByModule = modules?.map((module) => ({
-    module,
-    assignments:
-    assignments?.filter(
-      (assignment) => assignment.context_module_id === module.id
-    ) || [],
-  }));
-  
-  console.log("modules",assignments, assignmentsByModule);
+  const assignmentsByModule = modules?.map((module) => {
+    const itemsInModule = module.items?.map((item) => item.content_id);
+    return {
+      module,
+      assignments:
+        assignments?.filter((assignment) =>
+          itemsInModule?.includes(assignment.id)
+        ) || [],
+    };
+  });
 
   return (
     <>
-      <div>
+      <div className="bg-slate-900 m-2 p-2 rounded">
         <div>{course.original_name ?? course.name}</div>
         <button
           className="m-3"
@@ -59,31 +71,18 @@ export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
             {assignmentsByModule?.map(({ module, assignments }) => (
               <div key={module.id} className="module-section">
                 <h3 className="module-title">{module.name}</h3>
-                {assignments.map((assignment) => (
-                  <CanvasAssignmentComponent
-                    key={assignment.id}
-                    assignment={assignment}
-                  />
-                ))}
+                <div className="ps-5">
+                  {assignments.map((assignment) => (
+                    <SuspenseAndError key={assignment.id}>
+                      <CanvasAssignmentComponent assignment={assignment} />
+                    </SuspenseAndError>
+                  ))}
+                </div>
               </div>
             ))}
           </>
         )}
       </div>
     </>
-  );
-};
-
-const CanvasAssignmentComponent: FC<{ assignment: CanvasAssignment }> = ({
-  assignment,
-}) => {
-  return (
-    <div>
-      <div>{assignment.name}</div>
-      <div className="ms-4">
-        <p>Due: {assignment.due_at}</p>
-        <p>Points: {assignment.points_possible}</p>
-      </div>
-    </div>
   );
 };

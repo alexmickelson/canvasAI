@@ -1,6 +1,34 @@
 import { db } from "../dbUtils";
 import { canvasApi, paginatedRequest } from "./canvasServiceUtils";
 
+
+export interface CanvasModuleItem {
+  id: number;
+  module_id: number;
+  position: number;
+  title: string;
+  indent: number;
+  type: string;
+  content_id?: number;
+  html_url: string;
+  url?: string;
+  page_url?: string;
+  external_url?: string;
+  new_tab?: boolean;
+  completion_requirement?: {
+    type: string;
+    min_score?: number;
+    completed: boolean;
+  };
+  content_details?: {
+    points_possible?: number;
+    due_at?: string;
+    unlock_at?: string;
+    lock_at?: string;
+  };
+  published?: boolean;
+}
+
 export interface CanvasModule {
   id: number;
   name: string;
@@ -9,6 +37,7 @@ export interface CanvasModule {
   require_sequential_progress: boolean;
   publish_final_grade: boolean;
   published: boolean;
+  items?: CanvasModuleItem[];
 }
 
 async function getAllModulesInCourse(
@@ -17,15 +46,24 @@ async function getAllModulesInCourse(
   console.log("getting modules for course", courseId);
   return paginatedRequest<CanvasModule[]>({
     url: canvasApi + `/courses/${courseId}/modules`,
+    params: {
+      include: "items",
+    },
   });
 }
 
-export async function storeModuleInDatabase(module: CanvasModule, courseId: number) {
+export async function storeModuleInDatabase(
+  module: CanvasModule,
+  courseId: number
+) {
   console.log("storing module in database", module.name, courseId);
   await db.none(
     `insert into modules (id, name, course_id, original_record)
       values ($<id>, $<name>, $<course_id>, $<json>)
-      on conflict (id) do nothing`,
+      on conflict (id) do update
+      set name = excluded.name,
+          course_id = excluded.course_id,
+          original_record = excluded.original_record`,
     {
       id: module.id,
       name: module.name,

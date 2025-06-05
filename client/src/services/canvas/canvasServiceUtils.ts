@@ -1,4 +1,9 @@
-import type { AxiosResponseHeaders, RawAxiosResponseHeaders } from "axios";
+import type {
+  AxiosError,
+  AxiosResponse,
+  AxiosResponseHeaders,
+  RawAxiosResponseHeaders,
+} from "axios";
 import { axiosClient } from "../axiosUtils";
 import dotenv from "dotenv";
 dotenv.config();
@@ -16,13 +21,16 @@ const rateLimitSleepInterval = 1000;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export const isRateLimited = async (
-  headers: AxiosResponseHeaders | RawAxiosResponseHeaders
-): Promise<boolean> => {
-  const rateLimitRemaining = headers["x-rate-limit-remaining"];
-  return (
-    rateLimitRemaining !== undefined && parseInt(rateLimitRemaining, 10) === 0
-  );
+export const isRateLimited = (response: AxiosResponse) => {
+  if ((response.data + "").toLowerCase().includes("rate limit exceeded")) {
+    console.log(
+      "detected rate limit exceeded in response data",
+      response.config?.url
+    );
+    return true;
+  }
+
+  return false;
 };
 
 const getNextUrl = (
@@ -60,14 +68,11 @@ export async function rateLimitGet<T>(
     const response = await axiosClient.get<T>(url, options);
     return { data: response.data, headers: response.headers };
   } catch (error) {
-    const axiosError = error as Error & {
+    const axiosError = error as AxiosError & {
       response?: { status: number; headers: RawAxiosResponseHeaders };
     };
 
-    if (
-      axiosError.response &&
-      (await isRateLimited(axiosError.response.headers))
-    ) {
+    if (axiosError.response && isRateLimited(axiosError.response)) {
       if (retryCount < maxRetries) {
         console.info(
           `Hit rate limit, retry count is ${retryCount} / ${maxRetries}, retrying`
@@ -106,7 +111,7 @@ export async function paginatedRequest<T extends unknown[]>({
     url.searchParams.set(key, value.toString());
   });
 
-  const returnData= [];
+  const returnData = [];
   let nextUrl: string | undefined = url.toString();
 
   while (nextUrl) {

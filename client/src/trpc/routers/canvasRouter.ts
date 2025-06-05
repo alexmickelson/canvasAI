@@ -14,6 +14,7 @@ import {
   syncTerms,
 } from "../../services/canvas/canvasTermService";
 import { getModulesFromDatabase } from "../../services/canvas/canvasModuleService";
+import { getSubmissionsFromDatabaseByAssignmentId } from "../../services/canvas/canvasSubmissionsService";
 
 export const canvasRouter = {
   sync: publicProcedure.mutation(async () => {
@@ -47,4 +48,10 @@ export const canvasRouter = {
   modules: publicProcedure
     .input(z.object({ courseId: z.number() }))
     .query(async ({ input }) => getModulesFromDatabase(input.courseId)),
+
+  submissions: publicProcedure
+    .input(z.object({ assignmentId: z.number() }))
+    .query(async ({ input }) => {
+      return await getSubmissionsFromDatabaseByAssignmentId(input.assignmentId);
+    }),
 };
