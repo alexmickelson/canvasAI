@@ -53,7 +53,21 @@ export const Message = ({ msg }: { msg: ChatCompletionMessageParam }) => {
                 </div>
                 <div>
                   <span className="font-semibold text-yellow-400">Result:</span>{" "}
-                  {result}
+                  {(() => {
+                    try {
+                      const unescapedResult = JSON.parse(result);
+                      const parsedResult = Array.isArray(unescapedResult)
+                        ? unescapedResult
+                        : JSON.parse(unescapedResult);
+                      return (
+                        <pre className="bg-gray-900 p-2 rounded text-yellow-300">
+                          {JSON.stringify(parsedResult, null, 2)}
+                        </pre>
+                      );
+                    } catch {
+                      return result;
+                    }
+                  })()}
                 </div>
               </div>
             ) : (
