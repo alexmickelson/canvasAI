@@ -24,9 +24,27 @@ export const canvasRouter = {
 
   courses: publicProcedure.query(async () => getAllCoursesFromDatabase()),
 
+  course: publicProcedure
+    .input(z.object({ courseId: z.number() }))
+    .query(async ({ input }) => {
+      const courses = await getAllCoursesFromDatabase();
+      return courses.find((course) => course.id === input.courseId);
+    }),
+
   assignments: publicProcedure
     .input(z.object({ courseId: z.number() }))
     .query(({ input }) => getAssignmentsFromDatabaseByCourseId(input.courseId)),
+
+  assignment: publicProcedure
+    .input(z.object({ assignmentId: z.number() }))
+    .query(async ({ input }) => {
+      const assignments = await getAssignmentsFromDatabaseByCourseId(
+        input.assignmentId
+      );
+      return assignments.find(
+        (assignment) => assignment.id === input.assignmentId
+      );
+    }),
 
   syncCourseSubmissions: publicProcedure
     .input(z.object({ courseId: z.number() }))

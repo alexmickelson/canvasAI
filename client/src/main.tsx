@@ -5,13 +5,16 @@ import "./app.css";
 import { TRPCReactProvider } from "./trpc/trpcClient.tsx";
 import { Toaster } from "react-hot-toast";
 import { SuspenseAndError } from "./utils/SuspenseAndError.tsx";
+import { BrowserRouter } from "react-router";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Toaster />
     <SuspenseAndError>
       <TRPCReactProvider>
-        <App />
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
       </TRPCReactProvider>
     </SuspenseAndError>
   </StrictMode>

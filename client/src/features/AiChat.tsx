@@ -1,35 +1,10 @@
 import { useState, type FC, useRef, useEffect } from "react";
-import { AiChatProvider, useAiChat } from "./AiChatContext";
+import { useAiChat } from "./AiChatContext";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
-import { z } from "zod";
 import { Message } from "./Message";
 
-export const AiChat = () => {
-  const [title, setTitle] = useState("AI Chat");
-  return (
-    <AiChatProvider
-      tools={[
-        {
-          name: "set_title",
-          description: "Set the title of the chat",
-          paramsSchema: z.object({ title: z.string() }),
-          fn: (params: string) => {
-            const parsed = z
-              .object({ title: z.string() })
-              .parse(JSON.parse(params));
-            setTitle(parsed.title);
-            console.log("Setting title with params:", parsed.title);
-            return `Title set to: ${parsed.title}`;
-          },
-        },
-      ]}
-    >
-      <ChatDisplay title={title} />
-    </AiChatProvider>
-  );
-};
 
-const ChatDisplay: FC<{ title: string }> = ({ title }) => {
+export const ChatDisplay: FC<{ title: string }> = ({ title }) => {
   const [input, setInput] = useState("");
   const { messages, sendMessage } = useAiChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
