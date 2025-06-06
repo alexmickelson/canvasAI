@@ -2,7 +2,7 @@ import { useState, type FC, useRef, useEffect } from "react";
 import { useAiChat } from "./AiChatContext";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { Message } from "./Message";
-import { FaStopCircle } from 'react-icons/fa';
+import { FaStopCircle } from "react-icons/fa";
 
 export const ChatDisplay: FC<{ title: string }> = ({ title }) => {
   const [input, setInput] = useState("");
@@ -94,16 +94,16 @@ export const ChatDisplay: FC<{ title: string }> = ({ title }) => {
           }}
         />
         {isStreaming ? (
-            <button
+          <button
             type="button"
             onClick={(e) => {
               e.preventDefault();
               cancelStream();
             }}
             className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 flex items-center"
-            >
+          >
             <FaStopCircle className="mr-2" /> Stop
-            </button>
+          </button>
         ) : (
           <button
             type="submit"
