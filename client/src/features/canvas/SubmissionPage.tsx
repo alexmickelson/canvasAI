@@ -103,7 +103,52 @@ export const SubmissionPage = () => {
       <h1>Submission Page</h1>
       <p>Details for Assignment ID: {assignmentId}</p>
       <canvas ref={chartRef}></canvas>
-      <pre>{JSON.stringify(submissions, null, 2)}</pre>
+      <div className="submission-cards dark:bg-gray-800 dark:text-white p-4 rounded-lg flex flex-wrap gap-4">
+        {submissions.map((submission) => (
+          <div
+            key={submission.id}
+            className="card dark:bg-gray-900 dark:border-gray-700 border border-gray-300 p-4 rounded-lg flex-1 min-w-[200px]"
+          >
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {submission.user_id}
+            </h3>
+            <p>
+              <strong className="text-gray-700 dark:text-gray-300">
+                Score:
+              </strong>{" "}
+              {submission.score}
+            </p>
+            <p>
+              <strong className="text-gray-700 dark:text-gray-300">
+                Status:
+              </strong>{" "}
+              {submission.missing ? (
+                <span className="text-red-500 dark:text-red-400">Missing</span>
+              ) : submission.late ? (
+                <span className="text-yellow-500 dark:text-yellow-400">
+                  Late
+                </span>
+              ) : (
+                <span className="text-green-500 dark:text-green-400">
+                  On Time
+                </span>
+              )}
+            </p>
+            <p>
+              <strong className="text-gray-700 dark:text-gray-300">
+                Submitted:
+              </strong>{" "}
+              {new Date(submission.submitted_at || "").toLocaleString()}
+            </p>
+            <p>
+              <strong className="text-gray-700 dark:text-gray-300">
+                Grade:
+              </strong>{" "}
+              {submission.grade}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
