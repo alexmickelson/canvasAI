@@ -18,11 +18,23 @@ CREATE TABLE courses (
   original_record JSONB
 );
 
+-- Updated assignments table to include all fields from CanvasAssignment
 CREATE TABLE assignments (
   id BIGINT PRIMARY KEY,
   name TEXT,
-  course_id BIGINT REFERENCES courses(id),
+  description TEXT,
   due_date TIMESTAMP,
+  unlock_at TIMESTAMP,
+  lock_at TIMESTAMP,
+  course_id BIGINT REFERENCES courses(id),
+  html_url TEXT,
+  submission_types TEXT[],
+  grading_type TEXT,
+  points_possible NUMERIC,
+  grading_standard_id BIGINT,
+  published BOOLEAN,
+  muted BOOLEAN,
+  context_module_id BIGINT,
   original_record JSONB
 );
 

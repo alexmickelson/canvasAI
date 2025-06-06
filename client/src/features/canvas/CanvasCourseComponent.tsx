@@ -1,13 +1,13 @@
 import { useState, type FC } from "react";
-import type { CanvasCourse } from "../../services/canvas/canvasCourseService";
-import { useTRPC } from "../../trpc/trpcClient";
+import type { CanvasCourse } from "../../server/services/canvas/canvasCourseService";
+import { useTRPC } from "../../server/trpc/trpcClient";
 import {
   useMutation,
   useSuspenseQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { SuspenseAndError } from "../../utils/SuspenseAndError";
-import { CanvasAssignmentComponent } from "../../services/canvas/CanvasAssignmentComponent";
+import { CanvasAssignmentComponent } from "../../server/services/canvas/CanvasAssignmentComponent";
 
 export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
   course,

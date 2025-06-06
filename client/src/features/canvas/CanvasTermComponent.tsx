@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useTRPC } from "../../trpc/trpcClient";
+import { useTRPC } from "../../server/trpc/trpcClient";
 import { CanvasCourseComponent } from "./CanvasCourseComponent";
-import type { CanvasTerm } from "../../services/canvas/canvasCourseService";
+import type { CanvasTerm } from "../../server/services/canvas/canvasCourseService";
 
 export const CanvasTermComponent: React.FC<{ term: CanvasTerm }> = ({
   term,

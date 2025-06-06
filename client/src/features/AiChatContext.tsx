@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import { useTRPCClient } from "../trpc/trpcClient";
+import { useTRPCClient } from "../server/trpc/trpcClient";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import type OpenAI from "openai";
 import type { z } from "zod";

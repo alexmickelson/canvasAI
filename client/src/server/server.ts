@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import compression from "compression";
 import express from "express";
 import * as trpcExpress from "@trpc/server/adapters/express";
-import { appRouter } from "../trpc/utils/main";
+import { appRouter } from "./trpc/utils/main";
 
 EventEmitter.defaultMaxListeners = 40;
 const app = express();

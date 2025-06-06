@@ -31,18 +31,33 @@ async function getAllAssignmentsInCourse(
 
 async function storeAssignmentInDatabase(assignment: CanvasAssignment) {
   await db.none(
-    `insert into assignments (id, name, course_id, due_date, original_record)
-      values ($<id>, $<name>, $<course_id>, $<due_date>, $<json>)
-      on conflict (id) do update
-      set name = excluded.name,
-          course_id = excluded.course_id,
-          due_date = excluded.due_date,
-          original_record = excluded.original_record`,
+    `insert into assignments (
+      id, name, description, due_date, unlock_at, lock_at, course_id, html_url,
+      submission_types, grading_type, points_possible, grading_standard_id,
+      published, muted, context_module_id, original_record
+    ) values (
+      $<id>, $<name>, $<description>, $<due_at>, $<unlock_at>, $<lock_at>, $<course_id>, $<html_url>,
+      $<submission_types>, $<grading_type>, $<points_possible>, $<grading_standard_id>,
+      $<published>, $<muted>, $<context_module_id>, $<json>
+    ) on conflict (id) do update
+    set 
+      name = excluded.name,
+      description = excluded.description,
+      due_date = excluded.due_date,
+      unlock_at = excluded.unlock_at,
+      lock_at = excluded.lock_at,
+      course_id = excluded.course_id,
+      html_url = excluded.html_url,
+      submission_types = excluded.submission_types,
+      grading_type = excluded.grading_type,
+      points_possible = excluded.points_possible,
+      grading_standard_id = excluded.grading_standard_id,
+      published = excluded.published,
+      muted = excluded.muted,
+      context_module_id = excluded.context_module_id,
+      original_record = excluded.original_record`,
     {
-      id: assignment.id,
-      name: assignment.name,
-      course_id: assignment.course_id,
-      due_date: assignment.due_at ? new Date(assignment.due_at) : null,
+      ...assignment,
       json: assignment,
     }
   );

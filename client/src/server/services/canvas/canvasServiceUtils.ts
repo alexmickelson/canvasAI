@@ -4,7 +4,7 @@ import type {
   AxiosResponseHeaders,
   RawAxiosResponseHeaders,
 } from "axios";
-import { axiosClient } from "../axiosUtils";
+import { axiosClient } from "../../../utils/axiosUtils";
 import dotenv from "dotenv";
 dotenv.config();
 

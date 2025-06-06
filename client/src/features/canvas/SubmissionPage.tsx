@@ -1,6 +1,6 @@
 import { useSearchParams } from "react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useTRPC } from "../../trpc/trpcClient";
+import { useTRPC } from "../../server/trpc/trpcClient";
 
 export const SubmissionPage = () => {
   const [searchParams] = useSearchParams();
@@ -35,4 +35,3 @@ export const SubmissionPage = () => {
     </div>
   );
 };
-
