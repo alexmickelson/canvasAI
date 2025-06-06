@@ -105,3 +105,21 @@ export async function syncSubmissionsForAssignment(
     })
   );
 }
+export async function getSubmissionScoreAndClassAverage(
+  submissionId: number
+): Promise<{
+  userSubmission: CanvasSubmission | null;
+  classAverage: number | null;
+}> {
+  const result = await db.query(
+    `SELECT 
+      (SELECT original_record FROM submissions WHERE id = $<submissionId>) AS user_submission,
+      (SELECT COALESCE(AVG(score), 0) FROM submissions WHERE assignment_id = (SELECT assignment_id FROM submissions WHERE id = $<submissionId>)) AS class_average`,
+    { submissionId }
+  );
+
+  return {
+    userSubmission: result.rows[0]?.user_submission ?? null,
+    classAverage: result.rows[0]?.class_average,
+  };
+}

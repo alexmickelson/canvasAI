@@ -14,7 +14,9 @@ import {
   syncTerms,
 } from "../../services/canvas/canvasTermService";
 import { getModulesFromDatabase } from "../../services/canvas/canvasModuleService";
-import { getSubmissionsFromDatabaseByAssignmentId } from "../../services/canvas/canvasSubmissionsService";
+import {
+  getSubmissionsFromDatabaseByAssignmentId,
+} from "../../services/canvas/canvasSubmissionsService";
 
 export const canvasRouter = {
   sync: publicProcedure.mutation(async () => {
