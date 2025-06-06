@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import type { ReactNode } from "react";
 import { useTRPCClient } from "../server/trpc/trpcClient";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
@@ -10,6 +16,8 @@ import toast from "react-hot-toast";
 interface AiChatContextType {
   messages: ChatCompletionMessageParam[];
   sendMessage: (input: string) => Promise<void>;
+  cancelStream: () => void;
+  isStreaming: boolean;
 }
 
 const AiChatContext = createContext<AiChatContextType | null>(null);
@@ -39,10 +47,23 @@ export const AiChatProvider = ({
     },
   ]);
   const client = useTRPCClient();
+  const [stream, setStream] = useState<AsyncIterable<unknown> | null>(null);
+  const [ac, setAc] = useState(() => new AbortController());
+
+  const cancelStream = useCallback(() => {
+    ac.abort("user requestted to strop the stream");
+    setAc(new AbortController());
+    setStream(null);
+  }, [ac]);
 
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage) return;
+
+    if (stream) {
+      console.warn("Stream is already in progress, aborting new request.");
+      return;
+    }
 
     if (lastMessage.role !== "user" && lastMessage.role !== "tool") {
       console.log("not starting stream, last message is not user");
@@ -102,6 +123,7 @@ export const AiChatProvider = ({
           tool_call_id,
         };
         setMessages((prev) => [...prev, toolMessage]);
+        cancelStream();
       } catch (error) {
         console.error("Error executing tool function:", error);
       }
@@ -120,10 +142,17 @@ export const AiChatProvider = ({
           },
         }));
 
-      const stream = await client.ai.streamOpenAi.mutate({
-        messages: messages,
-        tools: toolsSchema,
-      });
+      const newStream = await client.ai.streamOpenAi.mutate(
+        {
+          messages: messages,
+          tools: toolsSchema,
+        },
+        {
+          signal: ac.signal,
+        }
+      );
+
+      setStream(newStream);
 
       const latestMessage: ChatCompletionMessageParam = {
         role: "assistant",
@@ -132,7 +161,7 @@ export const AiChatProvider = ({
       };
       setMessages((prev) => [...prev, latestMessage]);
 
-      for await (const chunk of stream) {
+      for await (const chunk of newStream) {
         // console.log(chunk);
         if (chunk.choices[0].finish_reason) {
           return chunk.choices[0].finish_reason;
@@ -148,6 +177,8 @@ export const AiChatProvider = ({
           });
         }
       }
+
+      setStream(null);
     };
 
     handleStream()
@@ -155,13 +186,28 @@ export const AiChatProvider = ({
         console.log("Stream finished with reason:", reason);
       })
       .catch((error) => {
+        if (
+          (error instanceof Error && error.message === "Stream closed") ||
+          (error instanceof Error &&
+            error.message.includes("The operation was aborted"))
+        ) {
+          return;
+        }
         const message = `Error during AI chat stream: ${
           error instanceof Error ? error.message : "An unknown error occurred"
         }`;
         toast.error(message);
         console.error(message);
+        setStream(null);
       });
-  }, [client.ai.streamOpenAi, messages, tools]);
+  }, [
+    ac.signal,
+    cancelStream,
+    client.ai.streamOpenAi,
+    messages,
+    stream,
+    tools,
+  ]);
 
   const sendMessage = async (input: string) => {
     const userMessage: ChatCompletionMessageParam = {
@@ -173,7 +219,14 @@ export const AiChatProvider = ({
   };
 
   return (
-    <AiChatContext.Provider value={{ messages, sendMessage }}>
+    <AiChatContext.Provider
+      value={{
+        messages,
+        sendMessage,
+        cancelStream,
+        isStreaming: !!stream,
+      }}
+    >
       {children}
     </AiChatContext.Provider>
   );

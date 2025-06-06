@@ -3,9 +3,7 @@ import { publicProcedure } from "../utils/trpc";
 import { z } from "zod";
 import { OpenAI } from "openai";
 import { ChatOllama } from "@langchain/ollama";
-import {
-  BaseMessage,
-} from "@langchain/core/messages";
+import { BaseMessage } from "@langchain/core/messages";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
 const ollamaUrl = "http://openwebui.bison-python.ts.net:11434/v1";
@@ -39,7 +37,6 @@ export const aiRouter = {
       for await (const chunk of stream) {
         yield chunk;
       }
-      // return stream;
     }),
   streamOpenAi: publicProcedure
     .input(
@@ -48,25 +45,40 @@ export const aiRouter = {
         tools: z.array(z.custom<OpenAI.Chat.Completions.ChatCompletionTool>()),
       })
     )
-    .mutation(async function* ({ input }) { // hack to send data in body
+    .mutation(async function* ({
+      input,
+      ctx,
+    }: {
+      input: {
+        messages: ChatCompletionMessageParam[];
+        tools: OpenAI.Chat.Completions.ChatCompletionTool[];
+      };
+      ctx: { signal?: AbortSignal };
+    }) {
+      const abortController = ctx?.signal ? undefined : new AbortController();
+      const signal = ctx?.signal || abortController?.signal;
+
       const openai = new OpenAI({
         baseURL: ollamaUrl,
         apiKey: "ollama",
       });
 
-      const stream = await openai.chat.completions.create({
+      const stream = await openai.chat.completions.stream({
         model: "qwen3:14b",
-        // model: "llama3.2",
         messages: input.messages,
         stream: true,
         tool_choice: "auto",
-        tools: [...input.tools], // could add other tools for server only
+        tools: [...input.tools],
+        signal,
       });
 
-      for await (const chunk of stream) {
-        // console.log(chunk, chunk.choices[0].delta);
-        yield chunk;
-
+      try {
+        for await (const chunk of stream) {
+          if (signal?.aborted) break;
+          yield chunk;
+        }
+      } finally {
+        abortController?.abort();
       }
     }),
 } satisfies TRPCRouterRecord;

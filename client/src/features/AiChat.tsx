@@ -2,11 +2,11 @@ import { useState, type FC, useRef, useEffect } from "react";
 import { useAiChat } from "./AiChatContext";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { Message } from "./Message";
-
+import { FaStopCircle } from 'react-icons/fa';
 
 export const ChatDisplay: FC<{ title: string }> = ({ title }) => {
   const [input, setInput] = useState("");
-  const { messages, sendMessage } = useAiChat();
+  const { messages, sendMessage, cancelStream, isStreaming } = useAiChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
@@ -52,13 +52,14 @@ export const ChatDisplay: FC<{ title: string }> = ({ title }) => {
               <Message key={index} msg={msg} />
             ))}
         </div>
-
       </div>
       <form
         className="flex items-center w-full"
         onSubmit={async (e) => {
           e.preventDefault();
-          await handleSend();
+          if (!isStreaming) {
+            await handleSend();
+          }
         }}
       >
         <textarea
@@ -85,17 +86,32 @@ export const ChatDisplay: FC<{ title: string }> = ({ title }) => {
                   cursorPosition + 1;
               } else {
                 e.preventDefault();
-                handleSend();
+                if (!isStreaming) {
+                  handleSend();
+                }
               }
             }
           }}
         />
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          Send
-        </button>
+        {isStreaming ? (
+            <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              cancelStream();
+            }}
+            className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 flex items-center"
+            >
+            <FaStopCircle className="mr-2" /> Stop
+            </button>
+        ) : (
+          <button
+            type="submit"
+            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Send
+          </button>
+        )}
       </form>
     </div>
   );
