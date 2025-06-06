@@ -1,7 +1,6 @@
 import { db } from "../dbUtils";
 import { canvasApi, paginatedRequest } from "./canvasServiceUtils";
 
-
 export interface CanvasModuleItem {
   id: number;
   module_id: number;
@@ -58,15 +57,44 @@ export async function storeModuleInDatabase(
 ) {
   console.log("storing module in database", module.name, courseId);
   await db.none(
-    `insert into modules (id, name, course_id, original_record)
-      values ($<id>, $<name>, $<course_id>, $<json>)
-      on conflict (id) do update
-      set name = excluded.name,
-          course_id = excluded.course_id,
-          original_record = excluded.original_record`,
+    `insert into modules (
+      id,
+      name,
+      position,
+      unlock_at,
+      require_sequential_progress,
+      publish_final_grade,
+      published,
+      course_id,
+      original_record
+    ) values (
+      $<id>,
+      $<name>,
+      $<position>,
+      $<unlock_at>,
+      $<require_sequential_progress>,
+      $<publish_final_grade>,
+      $<published>,
+      $<course_id>,
+      $<json>
+    ) on conflict (id) do update
+    set 
+      name = excluded.name,
+      position = excluded.position,
+      unlock_at = excluded.unlock_at,
+      require_sequential_progress = excluded.require_sequential_progress,
+      publish_final_grade = excluded.publish_final_grade,
+      published = excluded.published,
+      course_id = excluded.course_id,
+      original_record = excluded.original_record`,
     {
       id: module.id,
       name: module.name,
+      position: module.position,
+      unlock_at: module.unlock_at,
+      require_sequential_progress: module.require_sequential_progress,
+      publish_final_grade: module.publish_final_grade,
+      published: module.published,
       course_id: courseId,
       json: module,
     }

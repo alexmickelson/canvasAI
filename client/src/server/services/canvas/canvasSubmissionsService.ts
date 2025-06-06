@@ -27,16 +27,53 @@ async function getAllSubmissionsForAssignment(
 
 async function storeSubmissionInDatabase(submission: CanvasSubmission) {
   await db.none(
-    `insert into submissions (id, assignment_id, user_id, original_record)
-      values ($<id>, $<assignment_id>, $<user_id>, $<json>)
-      on conflict (id) do update
-      set assignment_id = excluded.assignment_id,
-          user_id = excluded.user_id,
-          original_record = excluded.original_record`,
+    `insert into submissions (
+      id,
+      assignment_id,
+      user_id,
+      submitted_at,
+      score,
+      grade,
+      workflow_state,
+      attempt,
+      late,
+      missing,
+      original_record
+    ) values (
+      $<id>,
+      $<assignment_id>,
+      $<user_id>,
+      $<submitted_at>,
+      $<score>,
+      $<grade>,
+      $<workflow_state>,
+      $<attempt>,
+      $<late>,
+      $<missing>,
+      $<json>
+    ) on conflict (id) do update
+    set 
+      assignment_id = excluded.assignment_id,
+      user_id = excluded.user_id,
+      submitted_at = excluded.submitted_at,
+      score = excluded.score,
+      grade = excluded.grade,
+      workflow_state = excluded.workflow_state,
+      attempt = excluded.attempt,
+      late = excluded.late,
+      missing = excluded.missing,
+      original_record = excluded.original_record`,
     {
       id: submission.id,
       assignment_id: submission.assignment_id,
       user_id: submission.user_id,
+      submitted_at: submission.submitted_at,
+      score: submission.score,
+      grade: submission.grade,
+      workflow_state: submission.workflow_state,
+      attempt: submission.attempt,
+      late: submission.late,
+      missing: submission.missing,
       json: submission,
     }
   );

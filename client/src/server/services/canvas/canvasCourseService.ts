@@ -89,32 +89,6 @@ export const CanvasCourseSchema = z.object({
 export type CanvasCourse = z.infer<typeof CanvasCourseSchema>;
 export type CanvasTerm = z.infer<typeof CanvasTermSchema>;
 
-async function getAllActiveCanvasCourses(): Promise<CanvasCourse[]> {
-  const courses = await paginatedRequest<CanvasCourse[]>({
-    url: `${canvasApi}/courses`,
-    params: { enrollment_state: "active", include: "term" },
-  });
-
-  return courses;
-}
-
-async function storeCourseInDatabase(course: CanvasCourse) {
-  await db.none(
-    `insert into courses (id, name, term_id, original_record)
-      values ($<id>, $<name>, $<term_id>, $<json>)
-      on conflict (id) do update
-      set name = excluded.name,
-          term_id = excluded.term_id,
-          original_record = excluded.original_record`,
-    {
-      id: course.id,
-      name: course.name,
-      term_id: course.enrollment_term_id,
-      json: course,
-    }
-  );
-}
-
 export async function getAllCoursesFromDatabase(): Promise<CanvasCourse[]> {
   const rows = await db.any(
     `select original_record as json
@@ -132,5 +106,181 @@ export async function syncAllCourses() {
       await syncAssignmentsForCourse(c.id);
       await syncModulesForCourse(c.id);
     })
+  );
+}
+
+async function getAllActiveCanvasCourses(): Promise<CanvasCourse[]> {
+  const courses = await paginatedRequest<CanvasCourse[]>({
+    url: `${canvasApi}/courses`,
+    params: { enrollment_state: "active", include: "term" },
+  });
+
+  return courses;
+}
+
+async function storeCourseInDatabase(course: CanvasCourse) {
+  await db.none(
+    `insert into courses (
+      id,
+      sis_course_id,
+      uuid,
+      integration_id,
+      sis_import_id,
+      name,
+      course_code,
+      original_name,
+      workflow_state,
+      account_id,
+      root_account_id,
+      enrollment_term_id,
+      grading_periods,
+      grading_standard_id,
+      grade_passback_setting,
+      created_at,
+      start_at,
+      end_at,
+      locale,
+      enrollments,
+      total_students,
+      calendar,
+      default_view,
+      syllabus_body,
+      needs_grading_count,
+      term,
+      course_progress,
+      apply_assignment_group_weights,
+      permissions,
+      is_public,
+      is_public_to_auth_users,
+      public_syllabus,
+      public_syllabus_to_auth,
+      public_description,
+      storage_quota_mb,
+      storage_quota_used_mb,
+      hide_final_grades,
+      license,
+      allow_student_assignment_edits,
+      allow_wiki_comments,
+      allow_student_forum_attachments,
+      open_enrollment,
+      self_enrollment,
+      restrict_enrollments_to_course_dates,
+      course_format,
+      access_restricted_by_date,
+      time_zone,
+      blueprint,
+      blueprint_restrictions,
+      blueprint_restrictions_by_object_type,
+      template,
+      original_record
+    ) values (
+      $<id>,
+      $<sis_course_id>,
+      $<uuid>,
+      $<integration_id>,
+      $<sis_import_id>,
+      $<name>,
+      $<course_code>,
+      $<original_name>,
+      $<workflow_state>,
+      $<account_id>,
+      $<root_account_id>,
+      $<enrollment_term_id>,
+      $<grading_periods>,
+      $<grading_standard_id>,
+      $<grade_passback_setting>,
+      $<created_at>,
+      $<start_at>,
+      $<end_at>,
+      $<locale>,
+      $<enrollments>,
+      $<total_students>,
+      $<calendar>,
+      $<default_view>,
+      $<syllabus_body>,
+      $<needs_grading_count>,
+      $<term>,
+      $<course_progress>,
+      $<apply_assignment_group_weights>,
+      $<permissions>,
+      $<is_public>,
+      $<is_public_to_auth_users>,
+      $<public_syllabus>,
+      $<public_syllabus_to_auth>,
+      $<public_description>,
+      $<storage_quota_mb>,
+      $<storage_quota_used_mb>,
+      $<hide_final_grades>,
+      $<license>,
+      $<allow_student_assignment_edits>,
+      $<allow_wiki_comments>,
+      $<allow_student_forum_attachments>,
+      $<open_enrollment>,
+      $<self_enrollment>,
+      $<restrict_enrollments_to_course_dates>,
+      $<course_format>,
+      $<access_restricted_by_date>,
+      $<time_zone>,
+      $<blueprint>,
+      $<blueprint_restrictions>,
+      $<blueprint_restrictions_by_object_type>,
+      $<template>,
+      $<json>
+    ) on conflict (id) do update set
+      sis_course_id = excluded.sis_course_id,
+      uuid = excluded.uuid,
+      integration_id = excluded.integration_id,
+      sis_import_id = excluded.sis_import_id,
+      name = excluded.name,
+      course_code = excluded.course_code,
+      original_name = excluded.original_name,
+      workflow_state = excluded.workflow_state,
+      account_id = excluded.account_id,
+      root_account_id = excluded.root_account_id,
+      enrollment_term_id = excluded.enrollment_term_id,
+      grading_periods = excluded.grading_periods,
+      grading_standard_id = excluded.grading_standard_id,
+      grade_passback_setting = excluded.grade_passback_setting,
+      created_at = excluded.created_at,
+      start_at = excluded.start_at,
+      end_at = excluded.end_at,
+      locale = excluded.locale,
+      enrollments = excluded.enrollments,
+      total_students = excluded.total_students,
+      calendar = excluded.calendar,
+      default_view = excluded.default_view,
+      syllabus_body = excluded.syllabus_body,
+      needs_grading_count = excluded.needs_grading_count,
+      term = excluded.term,
+      course_progress = excluded.course_progress,
+      apply_assignment_group_weights = excluded.apply_assignment_group_weights,
+      permissions = excluded.permissions,
+      is_public = excluded.is_public,
+      is_public_to_auth_users = excluded.is_public_to_auth_users,
+      public_syllabus = excluded.public_syllabus,
+      public_syllabus_to_auth = excluded.public_syllabus_to_auth,
+      public_description = excluded.public_description,
+      storage_quota_mb = excluded.storage_quota_mb,
+      storage_quota_used_mb = excluded.storage_quota_used_mb,
+      hide_final_grades = excluded.hide_final_grades,
+      license = excluded.license,
+      allow_student_assignment_edits = excluded.allow_student_assignment_edits,
+      allow_wiki_comments = excluded.allow_wiki_comments,
+      allow_student_forum_attachments = excluded.allow_student_forum_attachments,
+      open_enrollment = excluded.open_enrollment,
+      self_enrollment = excluded.self_enrollment,
+      restrict_enrollments_to_course_dates = excluded.restrict_enrollments_to_course_dates,
+      course_format = excluded.course_format,
+      access_restricted_by_date = excluded.access_restricted_by_date,
+      time_zone = excluded.time_zone,
+      blueprint = excluded.blueprint,
+      blueprint_restrictions = excluded.blueprint_restrictions,
+      blueprint_restrictions_by_object_type = excluded.blueprint_restrictions_by_object_type,
+      template = excluded.template,
+      original_record = excluded.original_record`,
+    {
+      ...course,
+      json: course,
+    }
   );
 }
