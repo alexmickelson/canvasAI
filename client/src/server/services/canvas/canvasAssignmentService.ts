@@ -1,25 +1,28 @@
 import { db } from "../dbUtils";
 import { canvasApi, paginatedRequest } from "./canvasServiceUtils";
 import { syncSubmissionsForAssignment } from "./canvasSubmissionsService";
+import { z } from "zod";
 
-export interface CanvasAssignment {
-  id: number;
-  name: string;
-  description?: string;
-  due_at?: string;
-  unlock_at?: string;
-  lock_at?: string;
-  course_id: number;
-  html_url: string;
-  submission_types: string[];
-  has_submitted_submissions: boolean;
-  grading_type: string;
-  points_possible: number;
-  grading_standard_id?: number;
-  published: boolean;
-  muted: boolean;
-  context_module_id?: number;
-}
+export const CanvasAssignmentSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  description: z.string().nullable().default(null),
+  due_at: z.string().nullable().default(null),
+  unlock_at: z.string().nullable().default(null),
+  lock_at: z.string().nullable().default(null),
+  course_id: z.number(),
+  html_url: z.string(),
+  submission_types: z.array(z.string()),
+  has_submitted_submissions: z.boolean(),
+  grading_type: z.string(),
+  points_possible: z.number().nullable().default(null),
+  grading_standard_id: z.number().nullable().default(null),
+  published: z.boolean(),
+  muted: z.boolean(),
+  context_module_id: z.number().nullable().default(null),
+});
+
+export type CanvasAssignment = z.infer<typeof CanvasAssignmentSchema>;
 
 async function getAllAssignmentsInCourse(
   courseId: number
@@ -57,7 +60,7 @@ async function storeAssignmentInDatabase(assignment: CanvasAssignment) {
       context_module_id = excluded.context_module_id,
       original_record = excluded.original_record`,
     {
-      ...assignment,
+      ...CanvasAssignmentSchema.parse(assignment),
       json: assignment,
     }
   );

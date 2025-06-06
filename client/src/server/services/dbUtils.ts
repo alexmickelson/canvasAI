@@ -8,6 +8,16 @@ const pgp = pgpromise({
 });
 export const db = pgp("postgres://siteuser:postgresewvraer@db:5432/my_db");
 
+db.$config.options.error = (err, e) => {
+  console.error("Database error:", err);
+  if (e && e.query) {
+    console.error("Failed query:", e.query);
+    if (e.params) {
+      console.error("Query parameters:", e.params);
+    }
+  }
+};
+
 export async function executeReadOnlySQL(sql: string) {
   return db.tx(
     { mode: new pgp.txMode.TransactionMode({ readOnly: true }) },
