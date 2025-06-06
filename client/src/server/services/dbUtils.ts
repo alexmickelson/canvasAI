@@ -8,6 +8,7 @@ const pgp = pgpromise({
 });
 export const db = pgp("postgres://siteuser:postgresewvraer@db:5432/my_db");
 
+
 db.$config.options.error = (err, e) => {
   console.error("Database error:", err);
   if (e && e.query) {
@@ -29,24 +30,9 @@ export async function executeReadOnlySQL(sql: string) {
 
 export async function listDbSchema() {
   const sql = `
-    SELECT
-      table_name,
-      (
-        SELECT string_agg(column_def, ', ' ORDER BY ordinal_position)
-        FROM (
-          SELECT
-             column_name || ' ' || data_type ||
-            COALESCE('(' || character_maximum_length || ')', '') ||
-            CASE WHEN is_nullable = 'NO' THEN ' NOT NULL' ELSE '' END AS column_def,
-            ordinal_position
-          FROM information_schema.columns
-          WHERE table_schema = 'public' AND table_name = t.table_name
-        ) AS columns
-      ) AS ddl
-    FROM information_schema.tables t
-    WHERE table_schema = 'public'
-      AND table_type = 'BASE TABLE'
-    ORDER BY table_name
+    SELECT *
+    FROM pg_catalog.pg_tables
+    WHERE schemaname = 'public'
   `;
   return executeReadOnlySQL(sql);
 }

@@ -29,7 +29,7 @@ export const AiChatProvider = ({
   tools: AiTool[];
 }) => {
   const systemPrompt = `You are an AI assistant, use the tools available to you when appropriate. 
-    Proactively assist your user
+    Proactively assist your user, after making a tool call, check if you need to make another tool call based on the result.
   `;
   const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([
     {
