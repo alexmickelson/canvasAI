@@ -53,9 +53,10 @@ async function getAllModulesInCourse(
 
 export async function storeModuleInDatabase(
   module: CanvasModule,
-  courseId: number
+  courseId: number,
+  syncJobId: number
 ) {
-  console.log("storing module in database", module.name, courseId);
+  console.log("storing module in database", module.name, courseId, syncJobId);
   await db.none(
     `insert into modules (
       id,
@@ -66,6 +67,7 @@ export async function storeModuleInDatabase(
       publish_final_grade,
       published,
       course_id,
+      sync_job_id,
       original_record
     ) values (
       $<id>,
@@ -76,6 +78,7 @@ export async function storeModuleInDatabase(
       $<publish_final_grade>,
       $<published>,
       $<course_id>,
+      $<sync_job_id>,
       $<json>
     ) on conflict (id) do update
     set 
@@ -86,6 +89,7 @@ export async function storeModuleInDatabase(
       publish_final_grade = excluded.publish_final_grade,
       published = excluded.published,
       course_id = excluded.course_id,
+      sync_job_id = excluded.sync_job_id,
       original_record = excluded.original_record`,
     {
       id: module.id,
@@ -96,6 +100,7 @@ export async function storeModuleInDatabase(
       publish_final_grade: module.publish_final_grade,
       published: module.published,
       course_id: courseId,
+      sync_job_id: syncJobId,
       json: module,
     }
   );
@@ -114,12 +119,15 @@ export async function getModulesFromDatabase(
   return rows.map((row) => row.json);
 }
 
-export async function syncModulesForCourse(courseId: number) {
+export async function syncModulesForCourse(
+  courseId: number,
+  syncJobId: number
+) {
   const modules = await getAllModulesInCourse(courseId);
   console.log("got modules from canvas", modules.length);
   await Promise.all(
     modules.map(async (module) => {
-      await storeModuleInDatabase(module, courseId);
+      await storeModuleInDatabase(module, courseId, syncJobId);
     })
   );
 }

@@ -3,6 +3,11 @@ import compression from "compression";
 import express from "express";
 import * as trpcExpress from "@trpc/server/adapters/express";
 import { appRouter } from "./trpc/utils/main";
+import cron from "node-cron";
+
+cron.schedule("* * * * *", () => {
+  console.log("running a task every minute");
+});
 
 EventEmitter.defaultMaxListeners = 40;
 const app = express();

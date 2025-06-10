@@ -32,16 +32,19 @@ async function getAllAssignmentsInCourse(
   });
 }
 
-async function storeAssignmentInDatabase(assignment: CanvasAssignment) {
+async function storeAssignmentInDatabase(
+  assignment: CanvasAssignment,
+  syncJobId: number
+) {
   await db.none(
     `insert into assignments (
       id, name, description, due_date, unlock_at, lock_at, course_id, html_url,
       submission_types, grading_type, points_possible, grading_standard_id,
-      published, muted, context_module_id, original_record
+      published, muted, context_module_id, sync_job_id, original_record
     ) values (
       $<id>, $<name>, $<description>, $<due_at>, $<unlock_at>, $<lock_at>, $<course_id>, $<html_url>,
       $<submission_types>, $<grading_type>, $<points_possible>, $<grading_standard_id>,
-      $<published>, $<muted>, $<context_module_id>, $<json>
+      $<published>, $<muted>, $<context_module_id>, $<sync_job_id>, $<json>
     ) on conflict (id) do update
     set 
       name = excluded.name,
@@ -58,9 +61,11 @@ async function storeAssignmentInDatabase(assignment: CanvasAssignment) {
       published = excluded.published,
       muted = excluded.muted,
       context_module_id = excluded.context_module_id,
+      sync_job_id = excluded.sync_job_id,
       original_record = excluded.original_record`,
     {
       ...CanvasAssignmentSchema.parse(assignment),
+      sync_job_id: syncJobId,
       json: assignment,
     }
   );
@@ -79,20 +84,15 @@ export async function getAssignmentsFromDatabaseByCourseId(
   return rows.map((row) => row.json);
 }
 
-export async function syncAssignmentsForCourse(courseId: number) {
+export async function syncAssignmentsAndSubmissionsForCourse(
+  courseId: number,
+  syncJobId: number
+) {
   const assignments = await getAllAssignmentsInCourse(courseId);
   await Promise.all(
     assignments.map(async (assignment) => {
-      await storeAssignmentInDatabase(assignment);
+      await storeAssignmentInDatabase(assignment, syncJobId);
+      await syncSubmissionsForAssignment(assignment.id, courseId, syncJobId);
     })
   );
 }
-
-export const syncAllSubmissionsForCourse = async (courseId: number) => {
-  const assignments = await getAllAssignmentsInCourse(courseId);
-  await Promise.all(
-    assignments.map(async (assignment) => {
-      await syncSubmissionsForAssignment(assignment.id, courseId);
-    })
-  );
-};

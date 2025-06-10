@@ -25,7 +25,10 @@ async function getAllSubmissionsForAssignment(
   });
 }
 
-async function storeSubmissionInDatabase(submission: CanvasSubmission) {
+async function storeSubmissionInDatabase(
+  submission: CanvasSubmission,
+  syncJobId: number
+) {
   await db.none(
     `insert into submissions (
       id,
@@ -38,6 +41,7 @@ async function storeSubmissionInDatabase(submission: CanvasSubmission) {
       attempt,
       late,
       missing,
+      sync_job_id,
       original_record
     ) values (
       $<id>,
@@ -50,6 +54,7 @@ async function storeSubmissionInDatabase(submission: CanvasSubmission) {
       $<attempt>,
       $<late>,
       $<missing>,
+      $<sync_job_id>,
       $<json>
     ) on conflict (id) do update
     set 
@@ -62,6 +67,7 @@ async function storeSubmissionInDatabase(submission: CanvasSubmission) {
       attempt = excluded.attempt,
       late = excluded.late,
       missing = excluded.missing,
+      sync_job_id = excluded.sync_job_id,
       original_record = excluded.original_record`,
     {
       id: submission.id,
@@ -74,6 +80,7 @@ async function storeSubmissionInDatabase(submission: CanvasSubmission) {
       attempt: submission.attempt,
       late: submission.late,
       missing: submission.missing,
+      sync_job_id: syncJobId,
       json: submission,
     }
   );
@@ -93,7 +100,8 @@ export async function getSubmissionsFromDatabaseByAssignmentId(
 
 export async function syncSubmissionsForAssignment(
   assignmentId: number,
-  courseId: number
+  courseId: number,
+  syncJobId: number
 ) {
   const submissions = await getAllSubmissionsForAssignment(
     assignmentId,
@@ -101,10 +109,11 @@ export async function syncSubmissionsForAssignment(
   );
   await Promise.all(
     submissions.map(async (submission) => {
-      await storeSubmissionInDatabase(submission);
+      await storeSubmissionInDatabase(submission, syncJobId);
     })
   );
 }
+
 export async function getSubmissionScoreAndClassAverage(
   submissionId: number
 ): Promise<{

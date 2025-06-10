@@ -7,7 +7,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { SuspenseAndError } from "../../utils/SuspenseAndError";
-import { CanvasAssignmentComponent } from "../../server/services/canvas/CanvasAssignmentComponent";
+import { CanvasAssignmentComponent } from "./CanvasAssignmentComponent";
 
 export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
   course,
