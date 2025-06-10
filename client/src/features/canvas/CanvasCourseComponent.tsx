@@ -1,11 +1,7 @@
 import { useState, type FC } from "react";
 import type { CanvasCourse } from "../../server/services/canvas/canvasCourseService";
 import { useTRPC } from "../../server/trpc/trpcClient";
-import {
-  useMutation,
-  useSuspenseQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { SuspenseAndError } from "../../utils/SuspenseAndError";
 import { CanvasAssignmentComponent } from "./CanvasAssignmentComponent";
 
@@ -14,23 +10,13 @@ export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
 }) => {
   const [showAssignments, setShowAssignments] = useState(false);
   const trpc = useTRPC();
-  const queryClient = useQueryClient();
+
   const { data: assignments } = useSuspenseQuery(
     trpc.canvas.assignments.queryOptions({ courseId: course.id })
   );
 
   const { data: modules } = useSuspenseQuery(
     trpc.canvas.modules.queryOptions({ courseId: course.id })
-  );
-
-  const syncSubmissionsMutation = useMutation(
-    trpc.canvas.syncCourseSubmissions.mutationOptions({
-      onSuccess: () => {
-        queryClient.invalidateQueries({
-          queryKey: trpc.canvas.submissions.queryKey(),
-        });
-      },
-    })
   );
 
   const assignmentsByModule = modules?.map((module) => {
@@ -47,25 +33,14 @@ export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
   return (
     <>
       <div className="bg-slate-900 m-2 p-2 rounded">
-        <div>{course.original_name ?? course.name}</div>
+        <div>{course.name}</div>
         <button
           className="m-3"
           onClick={() => setShowAssignments(!showAssignments)}
         >
           {showAssignments ? "Hide Assignments" : "Show Assignments"}
         </button>
-        <button
-          className="m-3"
-          onClick={() => {
-            console.log(course, course.id);
-            syncSubmissionsMutation.mutate({ courseId: course.id });
-          }}
-          disabled={syncSubmissionsMutation.isPending}
-        >
-          {syncSubmissionsMutation.isPending
-            ? "Syncing..."
-            : "Sync Submissions"}
-        </button>
+
         {showAssignments && (
           <>
             {assignmentsByModule?.map(({ module, assignments }) => (

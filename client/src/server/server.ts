@@ -4,9 +4,11 @@ import express from "express";
 import * as trpcExpress from "@trpc/server/adapters/express";
 import { appRouter } from "./trpc/utils/main";
 import cron from "node-cron";
+import { snapshotCanvasDataForTerm } from "./services/canvas/canvasSnapshotService";
 
-cron.schedule("* * * * *", () => {
-  console.log("running a task every minute");
+cron.schedule("0 2 * * *", async () => {
+  console.log("running a task every night at 2 am");
+  await snapshotCanvasDataForTerm("Spring 2025");
 });
 
 EventEmitter.defaultMaxListeners = 40;

@@ -10,15 +10,30 @@ import { getTermsFromDatabase } from "./canvasTermService";
 import { z } from "zod";
 
 export async function snapshotCanvasDataForTerm(termName: string) {
+  console.log("Starting snapshot for term:", termName);
   const termCourses = await syncPrep(termName);
   const syncJob = await createSyncJob(termName);
-  await Promise.all(
-    termCourses.map(async (c) => {
-      await syncEnrollmentsForCourse(c.id, syncJob.id);
-      await syncModulesForCourse(c.id, syncJob.id);
-      await syncAssignmentsAndSubmissionsForCourse(c.id, syncJob.id);
-    })
-  );
+  console.log(`Sync job created with ID: ${syncJob.id}`, termCourses.map(c => c.name));
+  try {
+    await Promise.all(
+      termCourses.map(async (c) => {
+        console.log(`Syncing course: ${c.name} (${c.id})`);
+        await syncEnrollmentsForCourse(c.id, syncJob.id);
+        await syncModulesForCourse(c.id, syncJob.id);
+        await syncAssignmentsAndSubmissionsForCourse(c.id, syncJob.id);
+      })
+    );
+    console.log("All courses synced successfully");
+    await updateSyncJobStatus(syncJob.id, "completed");
+  } catch (error) {
+    await updateSyncJobStatus(
+      syncJob.id,
+      "failed",
+      error instanceof Error ? error.message : String(error)
+    );
+    throw error;
+  }
+  await updateSyncJobStatus(syncJob.id, "completed");
 }
 
 async function syncPrep(termName: string) {
@@ -34,6 +49,7 @@ async function syncPrep(termName: string) {
   const termCourses = courses.filter(
     (course) => course.enrollment_term_id === term?.id
   );
+  
   return termCourses;
 }
 
@@ -100,4 +116,9 @@ export async function setJobMessage(
     { jobId, message }
   );
   return result[0];
+}
+
+export async function listAllSyncJobs(): Promise<SyncJob[]> {
+  const result = await db.any<SyncJob>(`SELECT * FROM sync_job ORDER BY started_at DESC`);
+  return result;
 }

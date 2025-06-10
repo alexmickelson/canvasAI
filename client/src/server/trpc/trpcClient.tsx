@@ -10,6 +10,16 @@ import { createTRPCContext } from "@trpc/tanstack-react-query";
 import type { AppRouter } from "./utils/main";
 import { toast } from "react-hot-toast";
 
+export function invalidateQueries(
+  queryClient: QueryClient,
+  queries: { queryKey: () => readonly unknown[] }[]
+) {
+  queries.forEach((query) => {
+    queryClient.invalidateQueries({
+      queryKey: query.queryKey(),
+    });
+  });
+}
 
 function makeQueryClient() {
   return new QueryClient({

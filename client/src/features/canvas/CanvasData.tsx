@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { useTRPC } from "../../server/trpc/trpcClient";
 import { CanvasTermComponent } from "./CanvasTermComponent";
+import SnapshotManagement from "./SnapshotManagement";
 
 export default function CanvasData() {
   const trpc = useTRPC();
@@ -27,10 +28,6 @@ export default function CanvasData() {
 
   return (
     <div>
-      {terms.map((term) => (
-        <CanvasTermComponent key={term.id} term={term} />
-      ))}
-
       <button
         className="mt-4 px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700 transition disabled:opacity-50"
         onClick={() => {
@@ -40,6 +37,12 @@ export default function CanvasData() {
       >
         {syncMutation.isPending ? "Syncing..." : "Sync courses and terms"}
       </button>
+      <SnapshotManagement />
+      <hr />
+      {terms.map((term) => (
+        <CanvasTermComponent key={term.id} term={term} />
+      ))}
+
     </div>
   );
 }

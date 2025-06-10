@@ -4,41 +4,62 @@ import { z } from "zod";
 import { syncTerms } from "./canvasTermService";
 
 export const CanvasTermSchema = z.object({
-  id: z.number(),
+  id: z.coerce.number(),
   name: z.string(),
-  start_at: z.string().nullable(),
-  end_at: z.string().nullable(),
+  start_at: z.coerce.string().nullable().default(null),
+  end_at: z.coerce.string().nullable().default(null),
 });
 
 export const CanvasCourseSchema = z.object({
-  id: z.number(),
+  id: z.coerce.number(),
   sis_course_id: z.string().nullable().default(null),
   uuid: z.string(),
   integration_id: z.string().nullable().default(null),
   name: z.string(),
   course_code: z.string(),
   workflow_state: z.enum(["unpublished", "available", "completed", "deleted"]),
-  enrollment_term_id: z.number(),
-  created_at: z.string(),
-  start_at: z.string().nullable().default(null),
-  end_at: z.string().nullable().default(null),
+  enrollment_term_id: z.coerce.number(),
+  created_at: z.coerce.string(),
+  start_at: z.coerce.string().nullable().default(null),
+  end_at: z.coerce.string().nullable().default(null),
   total_students: z.number().nullable().default(null),
   default_view: z.string(),
   needs_grading_count: z.number().nullable().default(null),
   public_description: z.string().nullable().default(null),
   hide_final_grades: z.boolean(),
   original_record: z.any(),
+  term: CanvasTermSchema,
 });
 
 export type CanvasCourse = z.infer<typeof CanvasCourseSchema>;
 export type CanvasTerm = z.infer<typeof CanvasTermSchema>;
-
 export async function getAllCoursesFromDatabase(): Promise<CanvasCourse[]> {
   const rows = await db.any(
-    `select original_record as json
-      from courses`
+    `select
+      c.id,
+      c.sis_course_id,
+      c.uuid,
+      c.integration_id,
+      c.name,
+      c.course_code,
+      c.workflow_state,
+      c.enrollment_term_id,
+      c.created_at,
+      c.start_at,
+      c.end_at,
+      c.total_students,
+      c.default_view,
+      c.needs_grading_count,
+      c.public_description,
+      c.hide_final_grades,
+      c.original_record,
+      row_to_json(t.*) as term
+    from courses c
+      left join terms t on c.enrollment_term_id = t.id
+    `
   );
-  return rows.map((row) => row.json);
+
+  return rows.map((row) => CanvasCourseSchema.parse(row));
 }
 
 export async function syncAllCourses() {

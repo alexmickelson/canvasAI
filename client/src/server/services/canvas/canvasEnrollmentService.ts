@@ -1,52 +1,57 @@
 import { db } from "../dbUtils";
 import { canvasApi, paginatedRequest } from "./canvasServiceUtils";
+import { z } from "zod";
 
-export interface CanvasEnrollment {
-  id: number;
-  course_id: number;
-  sis_course_id?: string;
-  course_integration_id?: string;
-  course_section_id?: number;
-  section_integration_id?: string;
-  sis_account_id?: string;
-  sis_section_id?: string;
-  sis_user_id?: string;
-  enrollment_state?: string;
-  limit_privileges_to_course_section?: boolean;
-  sis_import_id?: number;
-  root_account_id?: number;
-  type?: string;
-  user_id?: number;
-  associated_user_id?: number;
-  role?: string;
-  role_id?: number;
-  created_at?: string;
-  updated_at?: string;
-  start_at?: string;
-  end_at?: string;
-  last_activity_at?: string;
-  last_attended_at?: string;
-  total_activity_time?: number;
-  html_url?: string;
-  grades?: Record<string, unknown>;
-  user?: Record<string, unknown>;
-  override_grade?: string;
-  override_score?: number;
-  unposted_current_grade?: string;
-  unposted_final_grade?: string;
-  unposted_current_score?: string;
-  unposted_final_score?: string;
-  has_grading_periods?: boolean;
-  totals_for_all_grading_periods_option?: boolean;
-  current_grading_period_title?: string;
-  current_grading_period_id?: number;
-  current_period_override_grade?: string;
-  current_period_override_score?: number;
-  current_period_unposted_current_score?: number;
-  current_period_unposted_final_score?: number;
-  current_period_unposted_current_grade?: string;
-  current_period_unposted_final_grade?: string;
-}
+export const CanvasEnrollmentSchema = z.object({
+  id: z.number(),
+  course_id: z.number(),
+  sis_course_id: z.string().nullable().optional().default(null),
+  course_integration_id: z.string().nullable().optional().default(null),
+  course_section_id: z.number().nullable().optional().default(null),
+  section_integration_id: z.string().nullable().optional().default(null),
+  sis_account_id: z.string().nullable().optional().default(null),
+  sis_section_id: z.string().nullable().optional().default(null),
+  sis_user_id: z.string().nullable().optional().default(null),
+  enrollment_state: z.string().nullable().optional().default(null),
+  limit_privileges_to_course_section: z.boolean().nullable().optional().default(null),
+  sis_import_id: z.number().nullable().optional().default(null),
+  root_account_id: z.number().nullable().optional().default(null),
+  type: z.string().nullable().optional().default(null),
+  user_id: z.number().nullable().optional().default(null),
+  associated_user_id: z.number().nullable().optional().default(null),
+  role: z.string().nullable().optional().default(null),
+  role_id: z.number().nullable().optional().default(null),
+  created_at: z.string().nullable().optional().default(null),
+  updated_at: z.string().nullable().optional().default(null),
+  start_at: z.string().nullable().optional().default(null),
+  end_at: z.string().nullable().optional().default(null),
+  last_activity_at: z.string().nullable().optional().default(null),
+  last_attended_at: z.string().nullable().optional().default(null),
+  total_activity_time: z.number().nullable().optional().default(null),
+  html_url: z.string().nullable().optional().default(null),
+  grades: z.record(z.unknown()).nullable().optional().default(null),
+  user: z.record(z.unknown()).nullable().optional().default(null),
+  override_grade: z.string().nullable().optional().default(null),
+  override_score: z.number().nullable().optional().default(null),
+  unposted_current_grade: z.string().nullable().optional().default(null),
+  unposted_final_grade: z.string().nullable().optional().default(null),
+  unposted_current_score: z.string().nullable().optional().default(null),
+  unposted_final_score: z.string().nullable().optional().default(null),
+  has_grading_periods: z.boolean().nullable().optional().default(null),
+  totals_for_all_grading_periods_option: z.boolean().nullable().optional().default(null),
+  current_grading_period_title: z.string().nullable().optional().default(null),
+  current_grading_period_id: z.number().nullable().optional().default(null),
+  current_period_override_grade: z.string().nullable().optional().default(null),
+  current_period_override_score: z.number().nullable().optional().default(null),
+  current_period_unposted_current_score: z.number().nullable().optional().default(null),
+  current_period_unposted_final_score: z.number().nullable().optional().default(null),
+  current_period_unposted_current_grade: z.string().nullable().optional().default(null),
+  current_period_unposted_final_grade: z.string().nullable().optional().default(null),
+  original_record: z.record(z.unknown()).nullable().optional().default(null),
+  sync_job_id: z.number().nullable().optional().default(null),
+});
+
+export type CanvasEnrollment = z.infer<typeof CanvasEnrollmentSchema>;
 
 async function getAllEnrollmentsInCourse(
   courseId: number
@@ -60,11 +65,96 @@ export async function storeEnrollmentInDatabase(
   enrollment: CanvasEnrollment,
   syncJobId: number
 ) {
+  const validated = CanvasEnrollmentSchema.parse(enrollment);
   await db.none(
     `insert into enrollments (
-      id, course_id, sis_course_id, course_integration_id, course_section_id, section_integration_id, sis_account_id, sis_section_id, sis_user_id, enrollment_state, limit_privileges_to_course_section, sis_import_id, root_account_id, type, user_id, associated_user_id, role, role_id, created_at, updated_at, start_at, end_at, last_activity_at, last_attended_at, total_activity_time, html_url, grades, user, override_grade, override_score, unposted_current_grade, unposted_final_grade, unposted_current_score, unposted_final_score, has_grading_periods, totals_for_all_grading_periods_option, current_grading_period_title, current_grading_period_id, current_period_override_grade, current_period_override_score, current_period_unposted_current_score, current_period_unposted_final_score, current_period_unposted_current_grade, current_period_unposted_final_grade, sync_job_id, original_record
+      id,
+      course_id,
+      sis_course_id,
+      course_integration_id,
+      course_section_id,
+      section_integration_id,
+      sis_account_id,
+      sis_section_id,
+      sis_user_id,
+      enrollment_state,
+      limit_privileges_to_course_section,
+      root_account_id,
+      type,
+      user_id,
+      associated_user_id,
+      role,
+      role_id,
+      created_at,
+      updated_at,
+      start_at,
+      end_at,
+      last_activity_at,
+      last_attended_at,
+      total_activity_time,
+      html_url,
+      "user",
+      override_score,
+      unposted_current_grade,
+      unposted_final_grade,
+      unposted_current_score,
+      unposted_final_score,
+      has_grading_periods,
+      totals_for_all_grading_periods_option,
+      current_grading_period_title,
+      current_grading_period_id,
+      current_period_override_grade,
+      current_period_override_score,
+      current_period_unposted_current_score,
+      current_period_unposted_final_score,
+      current_period_unposted_current_grade,
+      current_period_unposted_final_grade,
+      sync_job_id,
+      original_record
     ) values (
-      $<id>, $<course_id>, $<sis_course_id>, $<course_integration_id>, $<course_section_id>, $<section_integration_id>, $<sis_account_id>, $<sis_section_id>, $<sis_user_id>, $<enrollment_state>, $<limit_privileges_to_course_section>, $<sis_import_id>, $<root_account_id>, $<type>, $<user_id>, $<associated_user_id>, $<role>, $<role_id>, $<created_at>, $<updated_at>, $<start_at>, $<end_at>, $<last_activity_at>, $<last_attended_at>, $<total_activity_time>, $<html_url>, $<grades>, $<user>, $<override_grade>, $<override_score>, $<unposted_current_grade>, $<unposted_final_grade>, $<unposted_current_score>, $<unposted_final_score>, $<has_grading_periods>, $<totals_for_all_grading_periods_option>, $<current_grading_period_title>, $<current_grading_period_id>, $<current_period_override_grade>, $<current_period_override_score>, $<current_period_unposted_current_score>, $<current_period_unposted_final_score>, $<current_period_unposted_current_grade>, $<current_period_unposted_final_grade>, $<sync_job_id>, $<json>
+      $<id>,
+      $<course_id>,
+      $<sis_course_id>,
+      $<course_integration_id>,
+      $<course_section_id>,
+      $<section_integration_id>,
+      $<sis_account_id>,
+      $<sis_section_id>,
+      $<sis_user_id>,
+      $<enrollment_state>,
+      $<limit_privileges_to_course_section>,
+      $<root_account_id>,
+      $<type>,
+      $<user_id>,
+      $<associated_user_id>,
+      $<role>,
+      $<role_id>,
+      $<created_at>,
+      $<updated_at>,
+      $<start_at>,
+      $<end_at>,
+      $<last_activity_at>,
+      $<last_attended_at>,
+      $<total_activity_time>,
+      $<html_url>,
+      $<user>,
+      $<override_score>,
+      $<unposted_current_grade>,
+      $<unposted_final_grade>,
+      $<unposted_current_score>,
+      $<unposted_final_score>,
+      $<has_grading_periods>,
+      $<totals_for_all_grading_periods_option>,
+      $<current_grading_period_title>,
+      $<current_grading_period_id>,
+      $<current_period_override_grade>,
+      $<current_period_override_score>,
+      $<current_period_unposted_current_score>,
+      $<current_period_unposted_final_score>,
+      $<current_period_unposted_current_grade>,
+      $<current_period_unposted_final_grade>,
+      $<sync_job_id>,
+      $<json>
     ) on conflict (id) do update
     set 
       course_id = excluded.course_id,
@@ -77,7 +167,6 @@ export async function storeEnrollmentInDatabase(
       sis_user_id = excluded.sis_user_id,
       enrollment_state = excluded.enrollment_state,
       limit_privileges_to_course_section = excluded.limit_privileges_to_course_section,
-      sis_import_id = excluded.sis_import_id,
       root_account_id = excluded.root_account_id,
       type = excluded.type,
       user_id = excluded.user_id,
@@ -92,9 +181,7 @@ export async function storeEnrollmentInDatabase(
       last_attended_at = excluded.last_attended_at,
       total_activity_time = excluded.total_activity_time,
       html_url = excluded.html_url,
-      grades = excluded.grades,
-      user = excluded.user,
-      override_grade = excluded.override_grade,
+      "user" = excluded.user,
       override_score = excluded.override_score,
       unposted_current_grade = excluded.unposted_current_grade,
       unposted_final_grade = excluded.unposted_final_grade,
@@ -113,7 +200,7 @@ export async function storeEnrollmentInDatabase(
       sync_job_id = excluded.sync_job_id,
       original_record = excluded.original_record`,
     {
-      ...enrollment,
+      ...validated,
       sync_job_id: syncJobId,
       json: enrollment,
     }
@@ -124,10 +211,10 @@ export async function getEnrollmentsFromDatabaseByCourseId(
   courseId: number
 ): Promise<CanvasEnrollment[]> {
   const rows = await db.any(
-    `select original_record as json from enrollments where course_id = $<courseId>`,
+    `select * from enrollments where course_id = $<courseId>`,
     { courseId }
   );
-  return rows.map((row) => row.json);
+  return rows.map((row) => CanvasEnrollmentSchema.parse(row.json));
 }
 
 export async function syncEnrollmentsForCourse(

@@ -7,7 +7,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "tsx watch src/server/server.ts"
+    "server": "tsx watch --clear-screen=false src/server/server.ts"
   },
   "dependencies": {
     "@huggingface/transformers": "3.5.0",

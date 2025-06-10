@@ -5,18 +5,15 @@ import {
   CanvasCourseSchema,
 } from "../../services/canvas/canvasCourseService";
 import { publicProcedure } from "../utils/trpc";
-import {
-  getAssignmentsFromDatabaseByCourseId,
-  syncAllSubmissionsForCourse,
-} from "../../services/canvas/canvasAssignmentService";
+import { getAssignmentsFromDatabaseByCourseId } from "../../services/canvas/canvasAssignmentService";
 import {
   getTermsFromDatabase,
   syncTerms,
 } from "../../services/canvas/canvasTermService";
 import { getModulesFromDatabase } from "../../services/canvas/canvasModuleService";
-import {
-  getSubmissionsFromDatabaseByAssignmentId,
-} from "../../services/canvas/canvasSubmissionsService";
+import { getSubmissionsFromDatabaseByAssignmentId } from "../../services/canvas/canvasSubmissionsService";
+import { snapshotCanvasDataForTerm } from "../../services/canvas/canvasSnapshotService";
+import { getEnrollmentsFromDatabaseByCourseId } from "../../services/canvas/canvasEnrollmentService";
 
 export const canvasRouter = {
   sync: publicProcedure.mutation(async () => {
@@ -24,7 +21,7 @@ export const canvasRouter = {
     await syncAllCourses();
   }),
 
-  courses: publicProcedure.query(async () => getAllCoursesFromDatabase()),
+  courses: publicProcedure.query(async () => await getAllCoursesFromDatabase()),
 
   course: publicProcedure
     .input(z.object({ courseId: z.number() }))
@@ -48,10 +45,10 @@ export const canvasRouter = {
       );
     }),
 
-  syncCourseSubmissions: publicProcedure
-    .input(z.object({ courseId: z.number() }))
+  grabSnapshot: publicProcedure
+    .input(z.object({ termName: z.string() }))
     .mutation(async ({ input }) => {
-      await syncAllSubmissionsForCourse(input.courseId);
+      await snapshotCanvasDataForTerm(input.termName);
     }),
 
   syncTerms: publicProcedure
@@ -73,5 +70,11 @@ export const canvasRouter = {
     .input(z.object({ assignmentId: z.number() }))
     .query(async ({ input }) => {
       return await getSubmissionsFromDatabaseByAssignmentId(input.assignmentId);
+    }),
+
+  enrollments: publicProcedure
+    .input(z.object({ courseId: z.number() }))
+    .query(async ({ input }) => {
+      return await getEnrollmentsFromDatabaseByCourseId(input.courseId);
     }),
 };
