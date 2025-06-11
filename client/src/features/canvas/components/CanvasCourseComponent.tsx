@@ -1,13 +1,13 @@
 import { useState, type FC } from "react";
-import type { CanvasCourse } from "../../server/services/canvas/canvasCourseService";
-import { useTRPC } from "../../server/trpc/trpcClient";
+import type { CanvasCourse } from "../../../server/services/canvas/canvasCourseService";
+import { useTRPC } from "../../../server/trpc/trpcClient";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { CanvasModuleComponent } from "./components/CanvasModuleComponent";
+import { CanvasModuleComponent } from "./CanvasModuleComponent";
 
 export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
   course,
 }) => {
-  const [showModules, setShowModules] = useState(false);
+  const [showAssignments, setShowAssignments] = useState(false);
   const trpc = useTRPC();
 
   const { data: assignments } = useSuspenseQuery(
@@ -35,12 +35,12 @@ export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
         <div>{course.name}</div>
         <button
           className="m-3"
-          onClick={() => setShowModules(!showModules)}
+          onClick={() => setShowAssignments(!showAssignments)}
         >
-          {showModules ? "Hide Modules" : "Show Modules"}
+          {showAssignments ? "Hide Assignments" : "Show Assignments"}
         </button>
 
-        {showModules && (
+        {showAssignments && (
           <>
             {assignmentsByModule?.map(({ module, assignments }) => (
               <CanvasModuleComponent

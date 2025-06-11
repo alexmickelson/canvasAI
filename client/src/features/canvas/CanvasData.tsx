@@ -4,7 +4,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { useTRPC } from "../../server/trpc/trpcClient";
-import { CanvasTermComponent } from "./CanvasTermComponent";
+import { CanvasTermComponent } from "./components/CanvasTermComponent";
 import SnapshotManagement from "./SnapshotManagement";
 
 export default function CanvasData() {
@@ -42,7 +42,6 @@ export default function CanvasData() {
       {terms.map((term) => (
         <CanvasTermComponent key={term.id} term={term} />
       ))}
-
     </div>
   );
 }

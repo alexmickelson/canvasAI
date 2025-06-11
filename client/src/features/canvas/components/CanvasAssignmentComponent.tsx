@@ -1,8 +1,8 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import type { FC } from "react";
-import { useTRPC } from "../../server/trpc/trpcClient";
-import type { CanvasAssignment } from "../../server/services/canvas/canvasAssignmentService";
+import { useTRPC } from "../../../server/trpc/trpcClient";
+import type { CanvasAssignment } from "../../../server/services/canvas/canvasAssignmentService";
 import {
   Chart as ChartJS,
   CategoryScale,

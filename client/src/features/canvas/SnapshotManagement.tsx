@@ -33,7 +33,7 @@ export default function SnapshotManagement() {
   const [termName, setTermName] = useState("");
 
   return (
-    <div className="p-6 bg-white dark:bg-gray-900 rounded shadow max-w-3xl mx-auto m-4">
+    <div className="p-3 bg-white dark:bg-gray-900 rounded shadow max-w-3xl mx-auto m-2">
       <div>
         <h5 className="font-semibold mb-2 text-gray-800 dark:text-gray-200">
           Snapshot History
@@ -94,7 +94,7 @@ export default function SnapshotManagement() {
           )}
         </div>
         <form
-          className="flex flex-col sm:flex-row gap-2 mb-6"
+          className="flex flex-col sm:flex-row gap-2 mt-3"
           onSubmit={(e) => {
             e.preventDefault();
             if (termName) runSnapshotMutation.mutate({ termName });
