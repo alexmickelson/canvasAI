@@ -1,7 +1,7 @@
 import { useSearchParams } from "react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "../../server/trpc/trpcClient";
-import { CanvasAssignmentComponent } from "./components/CanvasAssignmentComponent";
+import { CanvasAssignmentComponent } from "./components/assignments/CanvasAssignmentComponent";
 
 const AssignmentPage = () => {
   const [searchParams] = useSearchParams();

@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { CanvasAssignment } from "../../../server/services/canvas/canvasAssignmentService";
 import type { CanvasModule } from "../../../server/services/canvas/canvasModuleService";
 import { SuspenseAndError } from "../../../utils/SuspenseAndError";
-import { CanvasAssignmentComponent } from "./CanvasAssignmentComponent";
+import { CanvasAssignmentComponent } from "./assignments/CanvasAssignmentComponent";
 
 export const CanvasModuleComponent: FC<{
   module: CanvasModule;

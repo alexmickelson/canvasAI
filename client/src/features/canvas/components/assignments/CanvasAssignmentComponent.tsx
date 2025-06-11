@@ -1,8 +1,8 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { FC } from "react";
-import { useTRPC } from "../../../server/trpc/trpcClient";
-import type { CanvasAssignment } from "../../../server/services/canvas/canvasAssignmentService";
+import { useTRPC } from "../../../../server/trpc/trpcClient";
+import type { CanvasAssignment } from "../../../../server/services/canvas/canvasAssignmentService";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,9 +12,8 @@ import {
   Tooltip,
   Legend,
   BarController,
-  type ChartConfiguration,
 } from "chart.js";
-import { CustomChart } from "../../../utils/CustomChart";
+import { AssignmentGradesChart } from "./AssignmentGradesChart";
 
 ChartJS.register(
   CategoryScale,
@@ -33,46 +32,8 @@ export const CanvasAssignmentComponent: FC<{
   const { data: submissions } = useSuspenseQuery(
     trpc.canvas.submissions.queryOptions({ assignmentId: assignment.id })
   );
+
   const [showSubmissions, setShowSubmissions] = useState(false);
-
-  const chartConfig = useMemo((): ChartConfiguration => {
-    const sortedSubmissions = submissions
-      .map((submission) => {
-        const percentage =
-          submission.score && assignment.points_possible
-            ? (submission.score / assignment.points_possible) * 100
-            : 0;
-        return { user: `User ${submission.user_id}`, percentage };
-      })
-      .sort((a, b) => a.percentage - b.percentage);
-
-    const labels = sortedSubmissions.map((item) => item.user);
-    const data = sortedSubmissions.map((item) => item.percentage);
-
-    return {
-      type: "bar",
-      data: {
-        labels,
-        datasets: [
-          {
-            label: "Grade Percentage",
-            data,
-            backgroundColor: "rgba(75, 192, 192, 0.2)",
-            borderColor: "rgba(75, 192, 192, 1)",
-            borderWidth: 1,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: {
-            position: "top",
-          },
-        },
-      },
-    };
-  }, [assignment.points_possible, submissions]);
 
   return (
     <div className="bg-gray-800 rounded shadow-md outline-1 outline-slate-600 p-2 m-2">
@@ -107,7 +68,7 @@ export const CanvasAssignmentComponent: FC<{
       <div className="ms-4">
         {showSubmissions && (
           <div className="bg-slate-900 p-2 rounded">
-            <CustomChart config={chartConfig} />
+            <AssignmentGradesChart assignment={assignment} />
             <div className="mt-4">
               {submissions?.map((submission) => (
                 <div
