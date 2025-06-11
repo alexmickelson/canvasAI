@@ -4,6 +4,7 @@ DROP TABLE IF EXISTS submissions CASCADE;
 DROP TABLE IF EXISTS assignments CASCADE;
 DROP TABLE IF EXISTS courses CASCADE;
 DROP TABLE IF EXISTS modules CASCADE;
+DROP TABLE IF EXISTS module_items CASCADE;
 DROP TABLE IF EXISTS terms CASCADE;
 DROP TABLE IF EXISTS sync_job CASCADE;
 
@@ -87,6 +88,25 @@ CREATE TABLE modules (
   published BOOLEAN,
   course_id BIGINT REFERENCES courses(id),
   sync_job_id BIGINT REFERENCES sync_job(id),
+  original_record JSONB
+);
+
+CREATE TABLE module_items (
+  id BIGINT PRIMARY KEY,
+  module_id BIGINT REFERENCES modules(id),
+  position INTEGER,
+  title TEXT,
+  indent INTEGER,
+  type TEXT,
+  content_id BIGINT,
+  html_url TEXT,
+  url TEXT,
+  page_url TEXT,
+  external_url TEXT,
+  new_tab BOOLEAN,
+  completion_requirement JSONB,
+  content_details JSONB,
+  published BOOLEAN,
   original_record JSONB
 );
 

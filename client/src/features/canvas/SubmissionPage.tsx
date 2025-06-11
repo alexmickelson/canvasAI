@@ -11,7 +11,7 @@ export const SubmissionPage = () => {
 
   const trpc = useTRPC();
   const { data: submissions, isError } = useSuspenseQuery(
-    trpc.canvas.submissions.queryOptions({
+    trpc.canvas.assignmentSubmissions.queryOptions({
       assignmentId: parseInt(assignmentId || "0", 10),
     })
   );

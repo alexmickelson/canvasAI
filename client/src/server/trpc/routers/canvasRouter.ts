@@ -11,7 +11,10 @@ import {
   syncTerms,
 } from "../../services/canvas/canvasTermService";
 import { getModulesFromDatabase } from "../../services/canvas/canvasModuleService";
-import { getSubmissionsFromDatabaseByAssignmentId } from "../../services/canvas/canvasSubmissionsService";
+import {
+  getSubmissionsFromDatabaseByAssignmentId,
+  getSubmissionsFromDatabaseByModuleId,
+} from "../../services/canvas/canvasSubmissionsService";
 import { snapshotCanvasDataForTerm } from "../../services/canvas/canvasSnapshotService";
 import { getEnrollmentsFromDatabaseByCourseId } from "../../services/canvas/canvasEnrollmentService";
 
@@ -66,10 +69,15 @@ export const canvasRouter = {
     .input(z.object({ courseId: z.number() }))
     .query(async ({ input }) => getModulesFromDatabase(input.courseId)),
 
-  submissions: publicProcedure
+  assignmentSubmissions: publicProcedure
     .input(z.object({ assignmentId: z.number() }))
     .query(async ({ input }) => {
       return await getSubmissionsFromDatabaseByAssignmentId(input.assignmentId);
+    }),
+  moduleSubmissions: publicProcedure
+    .input(z.object({ moduleId: z.number() }))
+    .query(async ({ input }) => {
+      return await getSubmissionsFromDatabaseByModuleId(input.moduleId);
     }),
 
   enrollments: publicProcedure

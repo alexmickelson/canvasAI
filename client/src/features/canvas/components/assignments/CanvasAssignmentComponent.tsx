@@ -30,7 +30,9 @@ export const CanvasAssignmentComponent: FC<{
 }> = ({ assignment }) => {
   const trpc = useTRPC();
   const { data: submissions } = useSuspenseQuery(
-    trpc.canvas.submissions.queryOptions({ assignmentId: assignment.id })
+    trpc.canvas.assignmentSubmissions.queryOptions({
+      assignmentId: assignment.id,
+    })
   );
 
   const [showSubmissions, setShowSubmissions] = useState(false);

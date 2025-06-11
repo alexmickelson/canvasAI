@@ -1,9 +1,10 @@
 import type { FC } from "react";
 import { useState } from "react";
-import type { CanvasAssignment } from "../../../server/services/canvas/canvasAssignmentService";
-import type { CanvasModule } from "../../../server/services/canvas/canvasModuleService";
-import { SuspenseAndError } from "../../../utils/SuspenseAndError";
-import { CanvasAssignmentComponent } from "./assignments/CanvasAssignmentComponent";
+import type { CanvasAssignment } from "../../../../server/services/canvas/canvasAssignmentService";
+import type { CanvasModule } from "../../../../server/services/canvas/canvasModuleService";
+import { SuspenseAndError } from "../../../../utils/SuspenseAndError";
+import { CanvasAssignmentComponent } from "../assignments/CanvasAssignmentComponent";
+import { StudentGradesForModuleChart } from "./StudentGradesChart";
 
 export const CanvasModuleComponent: FC<{
   module: CanvasModule;
@@ -49,6 +50,9 @@ export const CanvasModuleComponent: FC<{
         }`}
       >
         <div className="ps-5">
+          <SuspenseAndError>
+            <StudentGradesForModuleChart moduleId={module.id} />
+          </SuspenseAndError>
           {assignments.map((assignment) => (
             <SuspenseAndError key={assignment.id}>
               <CanvasAssignmentComponent assignment={assignment} />

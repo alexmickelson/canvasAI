@@ -6,7 +6,6 @@ import {
 import { invalidateQueries, useTRPC } from "../../server/trpc/trpcClient";
 import { useState } from "react";
 
-
 export default function SnapshotManagement() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -23,7 +22,7 @@ export default function SnapshotManagement() {
           trpc.canvas.terms,
           trpc.canvas.assignments,
           trpc.canvas.modules,
-          trpc.canvas.submissions,
+          trpc.canvas.assignmentSubmissions,
           trpc.canvas.enrollments,
           trpc.snapshot.getSnapshots,
         ]);

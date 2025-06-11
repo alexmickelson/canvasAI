@@ -10,7 +10,9 @@ export const AssignmentGradesChart: FC<{
 }> = ({ assignment }) => {
   const trpc = useTRPC();
   const { data: submissions } = useSuspenseQuery(
-    trpc.canvas.submissions.queryOptions({ assignmentId: assignment.id })
+    trpc.canvas.assignmentSubmissions.queryOptions({
+      assignmentId: assignment.id,
+    })
   );
 
   const chartConfig = useMemo((): ChartConfiguration => {

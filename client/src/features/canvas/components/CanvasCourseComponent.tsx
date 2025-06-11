@@ -2,7 +2,7 @@ import { useState, type FC } from "react";
 import type { CanvasCourse } from "../../../server/services/canvas/canvasCourseService";
 import { useTRPC } from "../../../server/trpc/trpcClient";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { CanvasModuleComponent } from "./CanvasModuleComponent";
+import { CanvasModuleComponent } from "./modules/CanvasModuleComponent";
 
 export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
   course,
