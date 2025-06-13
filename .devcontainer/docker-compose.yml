@@ -29,7 +29,7 @@ services:
     entrypoint: sh
     command: |
       -c "
-        cd /app/client
+        cd /app
         pnpm install
         pnpm run dev
       "
@@ -44,7 +44,7 @@ services:
     entrypoint: sh
     command: |
       -c "
-        cd /app/client
+        cd /app
         pnpm install
         pnpm run server
       "
