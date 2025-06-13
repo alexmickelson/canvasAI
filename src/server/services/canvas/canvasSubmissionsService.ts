@@ -18,6 +18,7 @@ export const CanvasSubmissionSchema = z.object({
   attempt: z.number().nullable().optional(),
   late: z.boolean(),
   missing: z.boolean(),
+  user: z.string().optional(), // sometimes joined from enrollments
 });
 export type CanvasSubmission = z.infer<typeof CanvasSubmissionSchema>;
 
@@ -99,10 +100,18 @@ export async function getSubmissionsFromDatabaseByAssignmentId(
 ): Promise<CanvasSubmission[]> {
   const latestSyncId = syncJobId ? syncJobId : (await getLatestSyncJob()).id;
   const rows = await db.any(
-    `select original_record as json
+    `select 
+        jsonb_set(
+          submissions.original_record,
+          '{user}', to_jsonb(e."user"->>'name')
+        ) as json
       from submissions
-      where assignment_id = $<assignmentId>
-        and sync_job_id = $<syncJobId>`,
+        inner join assignments a
+          on a.id = submissions.assignment_id and a.sync_job_id = submissions.sync_job_id
+        inner join enrollments e
+          on e.user_id = submissions.user_id and e.course_id = a.course_id and e.sync_job_id = submissions.sync_job_id
+      where submissions.assignment_id = $<assignmentId>
+        and submissions.sync_job_id = $<syncJobId>`,
     { assignmentId, syncJobId: latestSyncId }
   );
   return rows.map((row) => CanvasSubmissionSchema.parse(row.json));
@@ -118,7 +127,15 @@ export async function getSubmissionsFromDatabaseByModuleId(
   const assignmentSubmissions = await db.any(
     `SELECT 
       a.original_record AS assignment,
-      COALESCE(json_agg(s.original_record), '[]') AS submissions
+      COALESCE(
+        json_agg(
+          jsonb_set(
+            s.original_record,
+            '{user}',
+            to_jsonb(e."user"->>'name')
+          )
+        ), '[]'
+      ) AS submissions
      FROM assignments a
       JOIN module_items mi 
         ON mi.content_id = a.id AND mi.type = 'Assignment' and mi.sync_job_id = a.sync_job_id
@@ -126,6 +143,8 @@ export async function getSubmissionsFromDatabaseByModuleId(
         ON mi.module_id = m.id and m.sync_job_id = a.sync_job_id
       LEFT JOIN submissions s 
         ON s.assignment_id = a.id AND s.sync_job_id = a.sync_job_id
+      INNER JOIN enrollments e
+        ON e.course_id = a.course_id AND e.sync_job_id = a.sync_job_id
      WHERE m.id = $<moduleId>
       and a.sync_job_id = $<syncJobId>
      GROUP BY a.original_record`,
@@ -166,10 +185,20 @@ export async function getSubmissionScoreAndClassAverage(
   const result = await db.query(
     `SELECT 
       (
-        SELECT original_record 
-        FROM submissions 
-        WHERE id = $<submissionId> 
-          AND sync_job_id = $<syncJobId>
+        SELECT 
+          jsonb_set(
+            s.original_record,
+            '{user}',
+            to_jsonb(e."user"->>'name')
+          )
+        FROM submissions s
+        INNER JOIN enrollments e
+          (ON e.user_id = s.user_id 
+          AND e.course_id = (SELECT assignment_id FROM submissions WHERE id = $<submissionId> AND sync_job_id = $<syncJobId>)
+          AND e.sync_job_id = s.sync_job_id)
+        WHERE s.id = $<submissionId> 
+          AND s.sync_job_id = $<syncJobId>
+        LIMIT 1
       ) AS user_submission,
       (
         SELECT COALESCE(AVG(score), 0) 

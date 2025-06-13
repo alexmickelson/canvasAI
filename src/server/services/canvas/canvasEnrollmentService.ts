@@ -231,6 +231,8 @@ export async function storeEnrollmentInDatabase(
     }
   );
 }
+
+
 export async function getEnrollmentsFromDatabaseByCourseId(
   courseId: number,
   syncJobId?: number

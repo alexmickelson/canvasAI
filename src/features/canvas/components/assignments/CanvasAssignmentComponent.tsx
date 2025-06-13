@@ -77,7 +77,7 @@ export const CanvasAssignmentComponent: FC<{
                   key={submission.id}
                   className="submission-details bg-gray-700 p-3 rounded mt-2"
                 >
-                  <p className="text-sm">User ID: {submission.user_id}</p>
+                  <p className="text-sm">User ID: {submission.user}</p>
                   <p className="text-sm">Score: {submission.score ?? "N/A"}</p>
                   <p className="text-sm">Grade: {submission.grade ?? "N/A"}</p>
                   <p className="text-sm">

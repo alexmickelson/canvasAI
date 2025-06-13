@@ -25,7 +25,7 @@ export const SubmissionPage = () => {
     const ctx = chartRef.current.getContext("2d");
     if (!ctx) return;
 
-    const labels = submissions.map((sub) => `User ${sub.user_id}`);
+    const labels = submissions.map((sub) => `User ${sub.user}`);
     const scores = submissions.map((sub) => sub.score ?? 0);
     const colors = submissions.map((sub) => {
       if (sub.missing) return "rgba(255, 99, 132, 0.6)";
@@ -110,7 +110,7 @@ export const SubmissionPage = () => {
             className="card dark:bg-gray-900 dark:border-gray-700 border border-gray-300 p-4 rounded-lg flex-1 min-w-[200px]"
           >
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {submission.user_id}
+              {submission.user}
             </h3>
             <p>
               <strong className="text-gray-700 dark:text-gray-300">

@@ -25,7 +25,7 @@ export const AssignmentGradesChart: FC<{
           submission.score && assignment.points_possible
             ? (submission.score / assignment.points_possible) * 100
             : 0;
-        return { user: `User ${submission.user_id}`, percentage };
+        return { user: `User ${submission.user}`, percentage };
       })
       .sort((a, b) => a.percentage - b.percentage);
 
