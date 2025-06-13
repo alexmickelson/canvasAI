@@ -79,7 +79,7 @@ export default function SnapshotManagement() {
                     : "-"}
                 </div>
                 <div className="flex-1 px-3 py-2 text-gray-700 dark:text-gray-300 max-w-xs truncate">
-                  {snap.error_message || "-"}
+                  {snap.message || "-"}
                 </div>
               </div>
             ))

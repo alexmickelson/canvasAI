@@ -60,12 +60,12 @@ const syncJobStatusEnum = z.enum(["started", "completed", "failed"]);
 export type SyncJobStatus = z.infer<typeof syncJobStatusEnum>;
 
 export const SyncJobSchema = z.object({
-  id: z.number(),
+  id: z.coerce.number(),
   job_name: z.string(),
   status: syncJobStatusEnum,
   started_at: z.coerce.date(),
   completed_at: z.coerce.date().nullable(),
-  error_message: z.string().nullable(),
+  message: z.coerce.string().nullable(),
 });
 export type SyncJob = z.infer<typeof SyncJobSchema>;
 
@@ -130,9 +130,13 @@ export async function listAllSyncJobs(): Promise<SyncJob[]> {
 
 export async function getLatestSyncJob(): Promise<SyncJob> {
   const result = await db.any<SyncJob>(
-    `SELECT * FROM sync_job ORDER BY started_at DESC LIMIT 1`
+    `SELECT * FROM sync_job 
+      ORDER BY started_at DESC 
+      LIMIT 1`
   );
-  if (result.length > 0) throw new Error("Cannot get most recent snapshot, no sync jobs found");
 
-  return result[0];
+  if (result.length === 0)
+    throw new Error("Cannot get most recent snapshot, no sync jobs found");
+  const job = SyncJobSchema.parse(result[0]);
+  return job;
 }

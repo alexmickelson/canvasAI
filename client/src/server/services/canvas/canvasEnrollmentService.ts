@@ -14,7 +14,11 @@ export const CanvasEnrollmentSchema = z.object({
   sis_section_id: z.string().nullable().optional().default(null),
   sis_user_id: z.string().nullable().optional().default(null),
   enrollment_state: z.string().nullable().optional().default(null),
-  limit_privileges_to_course_section: z.boolean().nullable().optional().default(null),
+  limit_privileges_to_course_section: z
+    .boolean()
+    .nullable()
+    .optional()
+    .default(null),
   sis_import_id: z.number().nullable().optional().default(null),
   root_account_id: z.number().nullable().optional().default(null),
   type: z.string().nullable().optional().default(null),
@@ -39,15 +43,35 @@ export const CanvasEnrollmentSchema = z.object({
   unposted_current_score: z.string().nullable().optional().default(null),
   unposted_final_score: z.string().nullable().optional().default(null),
   has_grading_periods: z.boolean().nullable().optional().default(null),
-  totals_for_all_grading_periods_option: z.boolean().nullable().optional().default(null),
+  totals_for_all_grading_periods_option: z
+    .boolean()
+    .nullable()
+    .optional()
+    .default(null),
   current_grading_period_title: z.string().nullable().optional().default(null),
   current_grading_period_id: z.number().nullable().optional().default(null),
   current_period_override_grade: z.string().nullable().optional().default(null),
   current_period_override_score: z.number().nullable().optional().default(null),
-  current_period_unposted_current_score: z.number().nullable().optional().default(null),
-  current_period_unposted_final_score: z.number().nullable().optional().default(null),
-  current_period_unposted_current_grade: z.string().nullable().optional().default(null),
-  current_period_unposted_final_grade: z.string().nullable().optional().default(null),
+  current_period_unposted_current_score: z
+    .number()
+    .nullable()
+    .optional()
+    .default(null),
+  current_period_unposted_final_score: z
+    .number()
+    .nullable()
+    .optional()
+    .default(null),
+  current_period_unposted_current_grade: z
+    .string()
+    .nullable()
+    .optional()
+    .default(null),
+  current_period_unposted_final_grade: z
+    .string()
+    .nullable()
+    .optional()
+    .default(null),
   original_record: z.record(z.unknown()).nullable().optional().default(null),
   sync_job_id: z.number().nullable().optional().default(null),
 });
@@ -211,7 +235,7 @@ export async function getEnrollmentsFromDatabaseByCourseId(
   courseId: number,
   syncJobId?: number
 ): Promise<CanvasEnrollment[]> {
-  const latestSyncId = syncJobId ? syncJobId : await getLatestSyncJob();
+  const latestSyncId = syncJobId ? syncJobId : (await getLatestSyncJob()).id;
   const rows = await db.any(
     `select * 
       from enrollments 

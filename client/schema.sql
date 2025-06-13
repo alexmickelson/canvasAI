@@ -107,6 +107,7 @@ CREATE TABLE module_items (
   completion_requirement JSONB,
   content_details JSONB,
   published BOOLEAN,
+  sync_job_id BIGINT REFERENCES sync_job(id),
   original_record JSONB
 );
 

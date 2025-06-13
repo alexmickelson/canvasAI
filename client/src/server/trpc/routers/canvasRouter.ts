@@ -78,7 +78,10 @@ export const canvasRouter = {
 
   assignmentSubmissions: publicProcedure
     .input(
-      z.object({ assignmentId: z.number(), syncJobId: z.number().optional() })
+      z.object({
+        assignmentId: z.number(),
+        syncJobId: z.coerce.number().optional(),
+      })
     )
     .query(async ({ input }) => {
       return await getSubmissionsFromDatabaseByAssignmentId(
@@ -87,7 +90,12 @@ export const canvasRouter = {
       );
     }),
   moduleSubmissions: publicProcedure
-    .input(z.object({ moduleId: z.number(), syncJobId: z.number().optional() }))
+    .input(
+      z.object({
+        moduleId: z.number(),
+        syncJobId: z.coerce.number().optional(),
+      })
+    )
     .query(async ({ input }) => {
       return await getSubmissionsFromDatabaseByModuleId(
         input.moduleId,

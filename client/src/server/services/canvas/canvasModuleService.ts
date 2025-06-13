@@ -103,7 +103,7 @@ export async function storeModuleInDatabase(
 
   if (validated.items && validated.items.length > 0) {
     for (const item of validated.items) {
-      await storeModuleItemInDatabase(item);
+      await storeModuleItemInDatabase(item, syncJobId);
     }
   } else {
     console.log(
@@ -117,14 +117,14 @@ export async function getModulesFromDatabase(
   courseId: number,
   syncJobId?: number
 ): Promise<CanvasModule[]> {
-  const latestSyncId = syncJobId ? syncJobId : await getLatestSyncJob();
+  const latestSyncId = syncJobId ? syncJobId : (await getLatestSyncJob()).id;
   const rows = await db.any<{ json: CanvasModule }>(
     `select original_record as json
      from modules
      where course_id = $<courseId>
        and sync_job_id = $<syncJobId>
      order by id`,
-    { courseId, syncJobId : latestSyncId}
+    { courseId, syncJobId: latestSyncId }
   );
   return rows.map((row) => row.json);
 }
@@ -152,7 +152,10 @@ export async function getAllModuleItemsInModule(
   });
 }
 
-export async function storeModuleItemInDatabase(item: CanvasModuleItem) {
+export async function storeModuleItemInDatabase(
+  item: CanvasModuleItem,
+  syncJobId?: number
+) {
   const validated = CanvasModuleItemSchema.parse(item);
   await db.none(
     `insert into module_items (
@@ -171,6 +174,7 @@ export async function storeModuleItemInDatabase(item: CanvasModuleItem) {
       completion_requirement,
       content_details,
       published,
+      sync_job_id,
       original_record
     ) values (
       $<id>,
@@ -188,6 +192,7 @@ export async function storeModuleItemInDatabase(item: CanvasModuleItem) {
       $<completion_requirement>,
       $<content_details>,
       $<published>,
+      $<sync_job_id>,
       $<json>
     ) on conflict (id) do update set
       module_id = excluded.module_id,
@@ -204,6 +209,7 @@ export async function storeModuleItemInDatabase(item: CanvasModuleItem) {
       completion_requirement = excluded.completion_requirement,
       content_details = excluded.content_details,
       published = excluded.published,
+      sync_job_id = excluded.sync_job_id,
       original_record = excluded.original_record`,
     {
       id: validated.id,
@@ -221,6 +227,7 @@ export async function storeModuleItemInDatabase(item: CanvasModuleItem) {
       completion_requirement: validated.completion_requirement,
       content_details: validated.content_details,
       published: validated.published,
+      sync_job_id: syncJobId,
       json: item,
     }
   );

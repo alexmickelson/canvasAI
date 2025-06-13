@@ -75,7 +75,7 @@ export async function getAssignmentsFromDatabaseByCourseId(
   courseId: number,
   syncJobId?: number
 ): Promise<CanvasAssignment[]> {
-  const latestSyncId = syncJobId ? syncJobId : await getLatestSyncJob();
+  const latestSyncId = syncJobId ? syncJobId : (await getLatestSyncJob()).id;
   const rows = await db.any(
     `select original_record as json
       from assignments

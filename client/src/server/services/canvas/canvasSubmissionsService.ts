@@ -97,7 +97,7 @@ export async function getSubmissionsFromDatabaseByAssignmentId(
   assignmentId: number,
   syncJobId?: number
 ): Promise<CanvasSubmission[]> {
-  const latestSyncId = syncJobId ? syncJobId : await getLatestSyncJob();
+  const latestSyncId = syncJobId ? syncJobId : (await getLatestSyncJob()).id;
   const rows = await db.any(
     `select original_record as json
       from submissions
@@ -114,7 +114,7 @@ export async function getSubmissionsFromDatabaseByModuleId(
 ): Promise<
   { assignment: CanvasAssignment; submissions: CanvasSubmission[] }[]
 > {
-  const latestSyncId = syncJobId ? syncJobId : await getLatestSyncJob();
+  const latestSyncId = syncJobId ? syncJobId : (await getLatestSyncJob()).id;
   const assignmentSubmissions = await db.any(
     `SELECT 
       a.original_record AS assignment,
@@ -162,7 +162,7 @@ export async function getSubmissionScoreAndClassAverage(
   userSubmission: CanvasSubmission | null;
   classAverage: number | null;
 }> {
-  const latestSyncId = syncJobId ? syncJobId : await getLatestSyncJob();
+  const latestSyncId = syncJobId ? syncJobId : (await getLatestSyncJob()).id;
   const result = await db.query(
     `SELECT 
       (
