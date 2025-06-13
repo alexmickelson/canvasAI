@@ -33,6 +33,7 @@ export const CanvasCourseSchema = z.object({
 
 export type CanvasCourse = z.infer<typeof CanvasCourseSchema>;
 export type CanvasTerm = z.infer<typeof CanvasTermSchema>;
+
 export async function getAllCoursesFromDatabase(): Promise<CanvasCourse[]> {
   const rows = await db.any(
     `select

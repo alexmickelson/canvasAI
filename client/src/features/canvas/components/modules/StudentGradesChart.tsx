@@ -3,23 +3,24 @@ import type { ChartConfiguration } from "chart.js";
 import { type FC, useMemo } from "react";
 import { useTRPC } from "../../../../server/trpc/trpcClient";
 import { CustomChart } from "../../../../utils/CustomChart";
+import { useSnapshotContext } from "../../snapshot/SnapshotContext";
 
 export const StudentGradesForModuleChart: FC<{
   moduleId: number;
 }> = ({ moduleId }) => {
   const trpc = useTRPC();
+  const { selectedSnapshot } = useSnapshotContext();
   const { data: submissionsByAssignment } = useSuspenseQuery(
     trpc.canvas.moduleSubmissions.queryOptions({
       moduleId,
+      syncJobId: selectedSnapshot?.id,
     })
   );
-  console.log("submissions",submissionsByAssignment);
 
   const chartConfig = useMemo((): ChartConfiguration => {
     if (!submissionsByAssignment)
       return { type: "line", data: { labels: [], datasets: [] } };
 
-    // Collect all unique user IDs
     const userIds = Array.from(
       new Set(
         submissionsByAssignment.flatMap(({ submissions }) =>
@@ -28,12 +29,10 @@ export const StudentGradesForModuleChart: FC<{
       )
     );
 
-    // Prepare labels (assignment names)
     const labels = submissionsByAssignment.map(
       ({ assignment }) => assignment.name
     );
 
-    // Prepare a dataset for each user
     const datasets = userIds.map((userId) => {
       return {
         label: `User ${userId}`,
@@ -51,7 +50,6 @@ export const StudentGradesForModuleChart: FC<{
         tension: 0.2,
       };
     });
-
 
     return {
       type: "line",

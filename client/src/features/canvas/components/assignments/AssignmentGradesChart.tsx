@@ -4,14 +4,17 @@ import { CustomChart } from "../../../../utils/CustomChart";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import type { CanvasAssignment } from "../../../../server/services/canvas/canvasAssignmentService";
 import { useTRPC } from "../../../../server/trpc/trpcClient";
+import { useSnapshotContext } from "../../snapshot/SnapshotContext";
 
 export const AssignmentGradesChart: FC<{
   assignment: CanvasAssignment;
 }> = ({ assignment }) => {
+  const { selectedSnapshot } = useSnapshotContext();
   const trpc = useTRPC();
   const { data: submissions } = useSuspenseQuery(
     trpc.canvas.assignmentSubmissions.queryOptions({
       assignmentId: assignment.id,
+      syncJobId: selectedSnapshot?.id,
     })
   );
 

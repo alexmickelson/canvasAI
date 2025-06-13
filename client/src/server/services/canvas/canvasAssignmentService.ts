@@ -1,5 +1,6 @@
 import { db } from "../dbUtils";
 import { canvasApi, paginatedRequest } from "./canvasServiceUtils";
+import { getLatestSyncJob } from "./canvasSnapshotService";
 import { syncSubmissionsForAssignment } from "./canvasSubmissionsService";
 import { z } from "zod";
 
@@ -70,16 +71,18 @@ async function storeAssignmentInDatabase(
     }
   );
 }
-
 export async function getAssignmentsFromDatabaseByCourseId(
-  courseId: number
+  courseId: number,
+  syncJobId?: number
 ): Promise<CanvasAssignment[]> {
+  const latestSyncId = syncJobId ? syncJobId : await getLatestSyncJob();
   const rows = await db.any(
     `select original_record as json
       from assignments
       where course_id = $<courseId>
+        and sync_job_id = $<syncJobId>
       order by due_date asc`,
-    { courseId }
+    { courseId, syncJobId: latestSyncId }
   );
   return rows.map((row) => row.json);
 }

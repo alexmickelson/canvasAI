@@ -34,14 +34,19 @@ export const canvasRouter = {
     }),
 
   assignments: publicProcedure
-    .input(z.object({ courseId: z.number() }))
-    .query(({ input }) => getAssignmentsFromDatabaseByCourseId(input.courseId)),
+    .input(z.object({ courseId: z.number(), syncJobId: z.number().optional() }))
+    .query(({ input }) =>
+      getAssignmentsFromDatabaseByCourseId(input.courseId, input.syncJobId)
+    ),
 
   assignment: publicProcedure
-    .input(z.object({ assignmentId: z.number() }))
+    .input(
+      z.object({ assignmentId: z.number(), syncJobId: z.number().optional() })
+    )
     .query(async ({ input }) => {
       const assignments = await getAssignmentsFromDatabaseByCourseId(
-        input.assignmentId
+        input.assignmentId,
+        input.syncJobId
       );
       return assignments.find(
         (assignment) => assignment.id === input.assignmentId
@@ -66,23 +71,36 @@ export const canvasRouter = {
   }),
 
   modules: publicProcedure
-    .input(z.object({ courseId: z.number() }))
-    .query(async ({ input }) => getModulesFromDatabase(input.courseId)),
+    .input(z.object({ courseId: z.number(), syncJobId: z.number().optional() }))
+    .query(async ({ input }) =>
+      getModulesFromDatabase(input.courseId, input.syncJobId)
+    ),
 
   assignmentSubmissions: publicProcedure
-    .input(z.object({ assignmentId: z.number() }))
+    .input(
+      z.object({ assignmentId: z.number(), syncJobId: z.number().optional() })
+    )
     .query(async ({ input }) => {
-      return await getSubmissionsFromDatabaseByAssignmentId(input.assignmentId);
+      return await getSubmissionsFromDatabaseByAssignmentId(
+        input.assignmentId,
+        input.syncJobId
+      );
     }),
   moduleSubmissions: publicProcedure
-    .input(z.object({ moduleId: z.number() }))
+    .input(z.object({ moduleId: z.number(), syncJobId: z.number().optional() }))
     .query(async ({ input }) => {
-      return await getSubmissionsFromDatabaseByModuleId(input.moduleId);
+      return await getSubmissionsFromDatabaseByModuleId(
+        input.moduleId,
+        input.syncJobId
+      );
     }),
 
   enrollments: publicProcedure
-    .input(z.object({ courseId: z.number() }))
+    .input(z.object({ courseId: z.number(), syncJobId: z.number().optional() }))
     .query(async ({ input }) => {
-      return await getEnrollmentsFromDatabaseByCourseId(input.courseId);
+      return await getEnrollmentsFromDatabaseByCourseId(
+        input.courseId,
+        input.syncJobId
+      );
     }),
 };

@@ -6,6 +6,7 @@ import { TRPCReactProvider } from "./server/trpc/trpcClient.tsx";
 import { Toaster } from "react-hot-toast";
 import { SuspenseAndError } from "./utils/SuspenseAndError.tsx";
 import { BrowserRouter } from "react-router";
+import { SnapshotProvider } from "./features/canvas/snapshot/SnapshotContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -13,7 +14,9 @@ createRoot(document.getElementById("root")!).render(
     <SuspenseAndError>
       <TRPCReactProvider>
         <BrowserRouter>
-          <App />
+          <SnapshotProvider>
+            <App />
+          </SnapshotProvider>
         </BrowserRouter>
       </TRPCReactProvider>
     </SuspenseAndError>

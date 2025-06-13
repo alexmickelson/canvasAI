@@ -1,6 +1,7 @@
 import { db } from "../dbUtils";
 import { canvasApi, paginatedRequest } from "./canvasServiceUtils";
 import { z } from "zod";
+import { getLatestSyncJob } from "./canvasSnapshotService";
 
 export const CanvasModuleItemSchema = z.object({
   id: z.number(),
@@ -112,16 +113,18 @@ export async function storeModuleInDatabase(
     );
   }
 }
-
 export async function getModulesFromDatabase(
-  courseId: number
+  courseId: number,
+  syncJobId?: number
 ): Promise<CanvasModule[]> {
+  const latestSyncId = syncJobId ? syncJobId : await getLatestSyncJob();
   const rows = await db.any<{ json: CanvasModule }>(
     `select original_record as json
      from modules
      where course_id = $<courseId>
+       and sync_job_id = $<syncJobId>
      order by id`,
-    { courseId }
+    { courseId, syncJobId : latestSyncId}
   );
   return rows.map((row) => row.json);
 }

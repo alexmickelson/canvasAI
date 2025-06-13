@@ -1,6 +1,7 @@
 import { db } from "../dbUtils";
 import { canvasApi, paginatedRequest } from "./canvasServiceUtils";
 import { z } from "zod";
+import { getLatestSyncJob } from "./canvasSnapshotService";
 
 export const CanvasEnrollmentSchema = z.object({
   id: z.number(),
@@ -206,13 +207,18 @@ export async function storeEnrollmentInDatabase(
     }
   );
 }
-
 export async function getEnrollmentsFromDatabaseByCourseId(
-  courseId: number
+  courseId: number,
+  syncJobId?: number
 ): Promise<CanvasEnrollment[]> {
+  const latestSyncId = syncJobId ? syncJobId : await getLatestSyncJob();
   const rows = await db.any(
-    `select * from enrollments where course_id = $<courseId>`,
-    { courseId }
+    `select * 
+      from enrollments 
+      where course_id = $<courseId> 
+        and sync_job_id = $<syncJobId>
+    `,
+    { courseId, syncJobId: latestSyncId }
   );
   return rows.map((row) => CanvasEnrollmentSchema.parse(row.json));
 }

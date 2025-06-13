@@ -13,7 +13,10 @@ export async function snapshotCanvasDataForTerm(termName: string) {
   console.log("Starting snapshot for term:", termName);
   const termCourses = await syncPrep(termName);
   const syncJob = await createSyncJob(termName);
-  console.log(`Sync job created with ID: ${syncJob.id}`, termCourses.map(c => c.name));
+  console.log(
+    `Sync job created with ID: ${syncJob.id}`,
+    termCourses.map((c) => c.name)
+  );
   try {
     await Promise.all(
       termCourses.map(async (c) => {
@@ -49,7 +52,7 @@ async function syncPrep(termName: string) {
   const termCourses = courses.filter(
     (course) => course.enrollment_term_id === term?.id
   );
-  
+
   return termCourses;
 }
 
@@ -119,6 +122,17 @@ export async function setJobMessage(
 }
 
 export async function listAllSyncJobs(): Promise<SyncJob[]> {
-  const result = await db.any<SyncJob>(`SELECT * FROM sync_job ORDER BY started_at DESC`);
+  const result = await db.any<SyncJob>(
+    `SELECT * FROM sync_job ORDER BY started_at DESC`
+  );
   return result;
+}
+
+export async function getLatestSyncJob(): Promise<SyncJob> {
+  const result = await db.any<SyncJob>(
+    `SELECT * FROM sync_job ORDER BY started_at DESC LIMIT 1`
+  );
+  if (result.length > 0) throw new Error("Cannot get most recent snapshot, no sync jobs found");
+
+  return result[0];
 }

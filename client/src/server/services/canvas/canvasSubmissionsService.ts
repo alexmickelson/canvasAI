@@ -5,6 +5,7 @@ import {
 } from "./canvasAssignmentService";
 import { canvasApi, paginatedRequest } from "./canvasServiceUtils";
 import { z } from "zod";
+import { getLatestSyncJob } from "./canvasSnapshotService";
 
 export const CanvasSubmissionSchema = z.object({
   id: z.number(),
@@ -92,37 +93,44 @@ async function storeSubmissionInDatabase(
     }
   );
 }
-
 export async function getSubmissionsFromDatabaseByAssignmentId(
-  assignmentId: number
+  assignmentId: number,
+  syncJobId?: number
 ): Promise<CanvasSubmission[]> {
+  const latestSyncId = syncJobId ? syncJobId : await getLatestSyncJob();
   const rows = await db.any(
     `select original_record as json
       from submissions
-      where assignment_id = $<assignmentId>`,
-    { assignmentId }
+      where assignment_id = $<assignmentId>
+        and sync_job_id = $<syncJobId>`,
+    { assignmentId, syncJobId: latestSyncId }
   );
   return rows.map((row) => CanvasSubmissionSchema.parse(row.json));
 }
 
 export async function getSubmissionsFromDatabaseByModuleId(
-  moduleId: number
+  moduleId: number,
+  syncJobId?: number
 ): Promise<
   { assignment: CanvasAssignment; submissions: CanvasSubmission[] }[]
 > {
+  const latestSyncId = syncJobId ? syncJobId : await getLatestSyncJob();
   const assignmentSubmissions = await db.any(
     `SELECT 
       a.original_record AS assignment,
       COALESCE(json_agg(s.original_record), '[]') AS submissions
      FROM assignments a
-      JOIN module_items mi ON mi.content_id = a.id AND mi.type = 'Assignment'
-      JOIN modules m ON mi.module_id = m.id
-      LEFT JOIN submissions s ON s.assignment_id = a.id
+      JOIN module_items mi 
+        ON mi.content_id = a.id AND mi.type = 'Assignment' and mi.sync_job_id = a.sync_job_id
+      JOIN modules m 
+        ON mi.module_id = m.id and m.sync_job_id = a.sync_job_id
+      LEFT JOIN submissions s 
+        ON s.assignment_id = a.id AND s.sync_job_id = a.sync_job_id
      WHERE m.id = $<moduleId>
+      and a.sync_job_id = $<syncJobId>
      GROUP BY a.original_record`,
-    { moduleId }
+    { moduleId, syncJobId: latestSyncId }
   );
-  // console.log(submissions);
   return assignmentSubmissions.map((row) => ({
     submissions: row.submissions.map((s: unknown) =>
       CanvasSubmissionSchema.parse(s)
@@ -148,16 +156,28 @@ export async function syncSubmissionsForAssignment(
 }
 
 export async function getSubmissionScoreAndClassAverage(
-  submissionId: number
+  submissionId: number,
+  syncJobId?: number
 ): Promise<{
   userSubmission: CanvasSubmission | null;
   classAverage: number | null;
 }> {
+  const latestSyncId = syncJobId ? syncJobId : await getLatestSyncJob();
   const result = await db.query(
     `SELECT 
-      (SELECT original_record FROM submissions WHERE id = $<submissionId>) AS user_submission,
-      (SELECT COALESCE(AVG(score), 0) FROM submissions WHERE assignment_id = (SELECT assignment_id FROM submissions WHERE id = $<submissionId>)) AS class_average`,
-    { submissionId }
+      (
+        SELECT original_record 
+        FROM submissions 
+        WHERE id = $<submissionId> 
+          AND sync_job_id = $<syncJobId>
+      ) AS user_submission,
+      (
+        SELECT COALESCE(AVG(score), 0) 
+        FROM submissions 
+        WHERE assignment_id = (SELECT assignment_id FROM submissions WHERE id = $<submissionId> AND sync_job_id = $<syncJobId>) 
+          AND sync_job_id = $<syncJobId>
+      ) AS class_average`,
+    { submissionId, syncJobId: latestSyncId }
   );
 
   return {
