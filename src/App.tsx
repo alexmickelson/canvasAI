@@ -8,6 +8,7 @@ import { useState } from "react";
 import z from "zod";
 import { AiChatProvider } from "./features/AiChatContext";
 import { useTRPCClient } from "./server/trpc/trpcClient";
+import { VoicePage } from "./features/voice/VoicePage";
 
 function createTool<T>({
   name,
@@ -236,6 +237,7 @@ Required query parameters:
               <Route path="/course" element={<CoursePage />} />
               <Route path="/assignment" element={<AssignmentPage />} />
               <Route path="/submission" element={<SubmissionPage />} />
+              <Route path="/voice" element={<VoicePage />} />
             </Routes>
           </div>
           <div className="p-1">
