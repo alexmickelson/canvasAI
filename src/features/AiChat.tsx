@@ -17,7 +17,7 @@ export const ChatDisplay: FC<{ title: string }> = ({ title }) => {
 
     const isAtBottom =
       container.scrollHeight - container.scrollTop <=
-      container.clientHeight + 50;
+      container.clientHeight + 150;
 
     setIsAutoScrollEnabled(isAtBottom);
   };

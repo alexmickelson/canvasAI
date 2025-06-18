@@ -6,6 +6,7 @@ import { ChatOllama } from "@langchain/ollama";
 import { BaseMessage } from "@langchain/core/messages";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
+// const ollamaUrl = "http://openwebui.bison-python.ts.net:11434/v1";
 const ollamaUrl = "http://openwebui.bison-python.ts.net:11434/v1";
 
 export const aiRequestSchema = z.object({
@@ -64,6 +65,8 @@ export const aiRouter = {
       });
 
       const stream = await openai.chat.completions.stream({
+        // model: "llama3.2:latest",
+        // model: "deepseek-r1:14b",
         model: "qwen3:14b",
         messages: input.messages,
         stream: true,
@@ -78,10 +81,11 @@ export const aiRouter = {
             console.log("Stream aborted");
             break;
           }
-          console.log(chunk.choices[0].delta);
+          // console.log(chunk.choices[0].delta);
           yield chunk;
         }
       } finally {
+        console.log("Stream finished, in finally block");
         abortController?.abort();
       }
     }),
