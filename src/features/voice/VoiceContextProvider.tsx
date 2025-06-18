@@ -4,8 +4,6 @@ import React, {
   useRef,
   useState,
   useCallback,
-  type Dispatch,
-  type SetStateAction,
 } from "react";
 
 interface TranscriptLine {
@@ -92,7 +90,6 @@ export const VoiceContextProvider: React.FC<{
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      // @ts-ignore: webkitAudioContext for Safari
       audioContextRef.current = new (window.AudioContext ||
         (window as any).webkitAudioContext)();
       const recorder = new MediaRecorder(stream, { mimeType: "audio/webm" });

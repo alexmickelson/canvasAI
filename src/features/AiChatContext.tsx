@@ -162,11 +162,15 @@ export const AiChatProvider = ({
       setMessages((prev) => [...prev, latestMessage]);
 
       for await (const chunk of newStream) {
-        // console.log(chunk);
+        console.log(chunk);
         if (chunk.choices[0].finish_reason) {
+          console.log(
+            "finishing stream with reason:",
+            chunk.choices[0].finish_reason
+          );
           return chunk.choices[0].finish_reason;
-        }
-        if (chunk.choices[0].delta.tool_calls?.length) {
+        } else if (chunk.choices[0].delta.tool_calls?.length) {
+          console.log("tool call detected in chunk:", chunk);
           await handleToolCall(chunk);
         } else {
           latestMessage.content += chunk.choices[0].delta.content || "";
@@ -177,13 +181,12 @@ export const AiChatProvider = ({
           });
         }
       }
-
-      setStream(null);
     };
 
     handleStream()
       .then((reason) => {
         console.log("Stream finished with reason:", reason);
+        setStream(null);
       })
       .catch((error) => {
         if (

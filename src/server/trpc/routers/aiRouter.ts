@@ -74,7 +74,11 @@ export const aiRouter = {
 
       try {
         for await (const chunk of stream) {
-          if (signal?.aborted) break;
+          if (signal?.aborted) {
+            console.log("Stream aborted");
+            break;
+          }
+          console.log(chunk.choices[0].delta);
           yield chunk;
         }
       } finally {
