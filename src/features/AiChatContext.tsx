@@ -38,6 +38,8 @@ export const AiChatProvider = ({
 }) => {
   const systemPrompt = `You are an AI assistant, use the tools available to you when appropriate. 
     Proactively assist your user, after making a tool call, check if you need to make another tool call based on the result.
+
+    Tool results are not provided by the user, but an automated system. Be sure to summerize tool call results to the user in a concise manner.
   `;
   const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([
     {
