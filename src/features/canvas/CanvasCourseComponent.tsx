@@ -1,13 +1,13 @@
-import { useState, type FC } from "react";
-import type { CanvasCourse } from "../../server/services/canvas/canvasCourseService";
-import { useTRPC } from "../../server/trpc/trpcClient";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { useTRPC } from "../../server/trpc/trpcClient";
+import type { CanvasCourse } from "../../server/services/canvas/canvasCourseService";
 import { CanvasModuleComponent } from "./components/modules/CanvasModuleComponent";
+import { Collapse } from "./components/modules/Collapse";
+import { type FC } from "react";
 
 export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
   course,
 }) => {
-  const [showModules, setShowModules] = useState(false);
   const trpc = useTRPC();
 
   const { data: assignments } = useSuspenseQuery(
@@ -30,25 +30,19 @@ export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
   });
 
   return (
-    <>
-      <div className="bg-slate-900 m-2 p-2 rounded">
-        <div>{course.name}</div>
-        <button className="m-3" onClick={() => setShowModules(!showModules)}>
-          {showModules ? "Hide Modules" : "Show Modules"}
-        </button>
-
-        {showModules && (
-          <>
-            {assignmentsByModule?.map(({ module, assignments }) => (
-              <CanvasModuleComponent
-                key={module.id}
-                module={module}
-                assignments={assignments}
-              />
-            ))}
-          </>
-        )}
+    <div className="bg-slate-900 m-2 p-2 rounded">
+      <div>{course.name}</div>
+      <div className="bg-slate-800 rounded">
+        <Collapse header={<span>Show/Hide Modules</span>}>
+          {assignmentsByModule?.map(({ module, assignments }) => (
+            <CanvasModuleComponent
+              key={module.id}
+              module={module}
+              assignments={assignments}
+            />
+          ))}
+        </Collapse>
       </div>
-    </>
+    </div>
   );
 };

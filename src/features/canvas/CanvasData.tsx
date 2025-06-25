@@ -7,6 +7,7 @@ import { useTRPC } from "../../server/trpc/trpcClient";
 import { CanvasTermComponent } from "./components/CanvasTermComponent";
 import { SuspenseAndError } from "../../utils/SuspenseAndError";
 import SnapshotManagement from "./snapshot/SnapshotManagement";
+import { Collapse } from "./components/modules/Collapse";
 
 export default function CanvasData() {
   const trpc = useTRPC();
@@ -27,6 +28,14 @@ export default function CanvasData() {
     })
   );
 
+  const mostRecentTerm = terms
+    .filter((term) => term.name.toLowerCase() !== "the end of time")
+    .sort((a, b) => {
+      const aDate = a.end_at ? new Date(a.end_at).getTime() : 0;
+      const bDate = b.end_at ? new Date(b.end_at).getTime() : 0;
+      return bDate - aDate;
+    })[0];
+
   return (
     <div>
       <button
@@ -41,12 +50,21 @@ export default function CanvasData() {
       <SuspenseAndError>
         <SnapshotManagement />
       </SuspenseAndError>
-      <hr />
-      <SuspenseAndError>
-        {terms.map((term) => (
-          <CanvasTermComponent key={term.id} term={term} />
-        ))}
-      </SuspenseAndError>
+      <div className="px-3">
+        <SuspenseAndError>
+          <CanvasTermComponent term={mostRecentTerm} />
+
+          <div className="mt-4 bg-slate-900 rounded">
+            <Collapse header={<span>Show all terms</span>}>
+              <div className=" bg-slate-900 m-2 rounded ">
+                {terms.map((term) => (
+                  <CanvasTermComponent key={term.id} term={term} />
+                ))}
+              </div>
+            </Collapse>
+          </div>
+        </SuspenseAndError>
+      </div>
     </div>
   );
 }

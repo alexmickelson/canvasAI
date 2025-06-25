@@ -15,18 +15,13 @@ export const CanvasTermComponent: React.FC<{ term: CanvasTerm }> = ({
     (c) => c.workflow_state === "available" && c.enrollment_term_id === term.id
   );
   return (
-    <div className="term-card bg-gray-800 text-white shadow-md rounded-lg p-4 mb-4">
-      <h2 className="term-name text-xl font-bold mb-2">{term.name}</h2>
-      <p className="term-id text-gray-400">ID: {term.id}</p>
-      {term.start_at && (
-        <p className="term-start text-gray-400">Start Date: {term.start_at}</p>
-      )}
-      {term.end_at && (
-        <p className="term-end text-gray-400">End Date: {term.end_at}</p>
-      )}
-      {currentCoruses.map((course) => (
-        <CanvasCourseComponent key={course.id} course={course} />
-      ))}
+    <div className="term-card rounded-lg mb-4 mx-2">
+      <h2 className="term-name font-bold mb-2 border-b-2 border-slate-600">{term.name}</h2>
+      <div>
+        {currentCoruses.map((course) => (
+          <CanvasCourseComponent key={course.id} course={course} />
+        ))}
+      </div>
     </div>
   );
 };
