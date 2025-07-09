@@ -14,7 +14,13 @@ export const Message = ({ msg }: { msg: ChatCompletionMessageParam }) => {
   const [, toolName, params, result] = toolMatch ?? ["", "", "", ""];
 
   if (msg.role === "tool") {
-    return <></>;
+    return (
+      <>
+        tool call
+        <br />
+        {msg.content?.toString() || ""}
+      </>
+    );
   }
   return (
     <div

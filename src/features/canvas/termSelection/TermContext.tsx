@@ -16,6 +16,7 @@ import type { CanvasTerm } from "../../../server/services/canvas/canvasCourseSer
 
 interface TermContextType {
   term: CanvasTerm;
+  setSelectedTerm: (term: CanvasTerm | undefined) => void;
 }
 
 const TermContext = createContext<TermContextType | undefined>(undefined);
@@ -63,9 +64,13 @@ export const TermProvider: FC<{ children: ReactNode }> = ({ children }) => {
     termFromStorage
   );
 
-  const setSelectedTerm = (term: CanvasTerm) => {
+  const setSelectedTerm = (term: CanvasTerm | undefined) => {
     setSelectedTermState(term);
-    localStorage.setItem("selectedTerm", JSON.stringify(term));
+    if (term) {
+      localStorage.setItem("selectedTerm", JSON.stringify(term));
+    } else {
+      localStorage.removeItem("selectedTerm");
+    }
   };
 
   if (isLoading) {
@@ -128,19 +133,31 @@ export const TermProvider: FC<{ children: ReactNode }> = ({ children }) => {
   }
 
   return (
-    <TermContext.Provider value={{ term: selectedTerm }}>
-      <div className="flex justify-end mb-4">
-        <button
-          className=""
-          onClick={() => {
-            setSelectedTermState(undefined);
-            localStorage.removeItem("selectedTerm");
-          }}
-        >
-          Select New Term
-        </button>
-      </div>
+    <TermContext.Provider value={{ term: selectedTerm, setSelectedTerm }}>
+
       {children}
     </TermContext.Provider>
   );
 };
+
+
+export const SelectNewTermButton: FC = () => {
+  const { setSelectedTerm } = useTermContext();
+  const trpc = useTRPC();
+  const { data: terms } = useSuspenseQuery(
+    trpc.canvas.terms.queryOptions()
+  );
+
+  return (
+    <button
+      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+      onClick={() => {
+        if (terms.length > 0) {
+          setSelectedTerm(terms[0]);
+        }
+      }}
+    >
+      Select New Term
+    </button>
+  );
+}

@@ -12,10 +12,12 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const openaiUrl = process.env.OPENAI_URL;
-if (!openaiUrl) throw new Error("OPENAI_URL environment variable is not set");
-const openaiKey = process.env.OPENAI_KEY;
-if (!openaiKey) throw new Error("OPENAI_KEY environment variable is not set");
+const aiUrl = process.env.AI_URL;
+if (!aiUrl) throw new Error("AI_URL environment variable is not set");
+const aiKey = process.env.AI_KEY;
+if (!aiKey) throw new Error("AI_KEY environment variable is not set");
+const aiModel = process.env.AI_MODEL;
+if (!aiModel) throw new Error("AI_MODEL environment variable is not set");
 
 export const aiRequestSchema = z.object({
   context: z.string(),
@@ -73,22 +75,20 @@ export const aiRouter = {
       // });
 
       const openai = new OpenAI({
-        baseURL: openaiUrl,
-        apiKey: openaiKey,
-      });
-
-      const stream = await openai.chat.completions.stream({
-        // model: "llama3.2:latest",
-        // model: "deepseek-r1:14b",
-        model: "qwen3:14b",
-        messages: input.messages,
-        stream: true,
-        tool_choice: "auto",
-        tools: [...input.tools],
-        signal,
+        baseURL: aiUrl,
+        apiKey: aiKey,
       });
 
       try {
+        const stream = openai.chat.completions.stream({
+          model: aiModel,
+          messages: input.messages,
+          stream: true,
+          tool_choice: "auto",
+          tools: [...input.tools],
+          signal,
+        });
+
         for await (const chunk of stream) {
           if (signal?.aborted) {
             console.log("Stream aborted");
@@ -97,6 +97,16 @@ export const aiRouter = {
           // console.log(chunk.choices[0].delta);
           yield chunk;
         }
+      } catch (e) {
+        console.log("stream config", {
+          model: aiModel,
+          messages: input.messages,
+          stream: true,
+          tool_choice: "auto",
+          tools: [...input.tools],
+          signal,
+        });
+        throw e;
       } finally {
         console.log("Stream finished, in finally block");
         abortController?.abort();

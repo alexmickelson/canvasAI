@@ -8,7 +8,6 @@ const pgp = pgpromise({
 });
 export const db = pgp("postgres://siteuser:postgresewvraer@db:5432/my_db");
 
-
 db.$config.options.error = (err, e) => {
   console.error("Database error:", err);
   if (e && e.query) {
@@ -20,12 +19,16 @@ db.$config.options.error = (err, e) => {
 };
 
 export async function executeReadOnlySQL(sql: string) {
-  return db.tx(
+  const res = await db.tx(
     { mode: new pgp.txMode.TransactionMode({ readOnly: true }) },
     async (t) => {
       return t.any(sql);
     }
   );
+
+  // console.log("result:", res);
+
+  return res;
 }
 
 export async function listDbSchema() {

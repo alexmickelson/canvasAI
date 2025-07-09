@@ -11,7 +11,7 @@ export const dbRouter = {
     )
     .query(async ({ input }) => {
       const result = await executeReadOnlySQL(input.query);
-      return { result };
+      return result;
     }),
 
   listDbSchema: publicProcedure.query(async () => {

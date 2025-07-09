@@ -6,12 +6,13 @@ import {
   useCallback,
 } from "react";
 import type { ReactNode } from "react";
-import { useTRPCClient } from "../server/trpc/trpcClient";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import type OpenAI from "openai";
-import type { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import toast from "react-hot-toast";
+import { useHandleToolCall } from "./useHandleToolCall";
+import { useTRPCClient } from "../../server/trpc/trpcClient";
+import type { AiTool } from "../../utils/createAiTool";
 
 interface AiChatContextType {
   messages: ChatCompletionMessageParam[];
@@ -22,25 +23,15 @@ interface AiChatContextType {
 
 const AiChatContext = createContext<AiChatContextType | null>(null);
 
-export interface AiTool {
-  name: string;
-  description: string;
-  paramsSchema: z.ZodTypeAny;
-  fn: (params: string) => unknown;
-}
-
 export const AiChatProvider = ({
   children,
   tools,
+  systemPrompt,
 }: {
+  systemPrompt: string;
   children: ReactNode;
   tools: AiTool[];
 }) => {
-  const systemPrompt = `You are an AI assistant, use the tools available to you when appropriate. 
-    Proactively assist your user, after making a tool call, check if you need to make another tool call based on the result.
-
-    Tool results are not provided by the user, but an automated system. Be sure to summerize tool call results to the user in a concise manner.
-  `;
   const [messages, setMessages] = useState<ChatCompletionMessageParam[]>([
     {
       role: "system",
@@ -58,6 +49,12 @@ export const AiChatProvider = ({
     setStream(null);
   }, [ac]);
 
+  const handleToolCall = useHandleToolCall({
+    tools,
+    setMessages,
+    cancelStream,
+  });
+
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage) return;
@@ -74,63 +71,6 @@ export const AiChatProvider = ({
       console.log("starting stream with messages:", messages);
     }
 
-    async function handleToolCall(
-      chunk: OpenAI.Chat.Completions.ChatCompletionChunk
-    ) {
-      console.log("tool call detected", chunk.choices[0].delta.tool_calls);
-
-      const chosenTool = tools.find(
-        (tool) =>
-          tool.name === chunk.choices[0].delta.tool_calls?.[0].function?.name
-      );
-      if (!chosenTool) {
-        console.error("Tool not found:", chunk.choices[0].delta.tool_calls);
-        return;
-      }
-      const params = chunk.choices[0].delta.tool_calls?.[0].function?.arguments;
-      if (!params) {
-        console.error(
-          "No parameters provided for tool call",
-          chunk.choices[0].delta.tool_calls
-        );
-        return;
-      }
-      try {
-        const result = await chosenTool.fn(params);
-        // console.log("Tool result:", result);
-
-        const newMessageContent = `Tool: ${
-          chosenTool.name
-        } Params: ${params} Result: ${JSON.stringify(result)}`;
-
-        setMessages((prev) => {
-          const updatedMessages = [...prev];
-          const lastIdx = updatedMessages.length - 1;
-          updatedMessages[lastIdx] = {
-            ...updatedMessages[lastIdx],
-            content:
-              (updatedMessages[lastIdx].content || "") + newMessageContent,
-          };
-          return updatedMessages;
-        });
-
-        // Send the tool result back to the LLM as a tool message
-        const tool_call_id =
-          chunk.choices[0].delta.tool_calls?.[0].id ??
-          chunk.choices[0].delta.tool_calls?.[0].function?.name ??
-          "unknown_tool_call_id";
-        const toolMessage: ChatCompletionMessageParam = {
-          role: "tool",
-          content: JSON.stringify(result),
-          tool_call_id,
-        };
-        setMessages((prev) => [...prev, toolMessage]);
-        cancelStream();
-      } catch (error) {
-        console.error("Error executing tool function:", error);
-      }
-    }
-
     const handleStream = async () => {
       const toolsSchema: OpenAI.Chat.Completions.ChatCompletionTool[] =
         tools.map((tool) => ({
@@ -143,6 +83,7 @@ export const AiChatProvider = ({
             }),
           },
         }));
+      console.log("toolsSchema", toolsSchema);
 
       const newStream = await client.ai.streamOpenAi.mutate(
         {
@@ -159,28 +100,36 @@ export const AiChatProvider = ({
       const latestMessage: ChatCompletionMessageParam = {
         role: "assistant",
         content: "",
-        name: "assistant",
+        // name: "assistant",
       };
       setMessages((prev) => [...prev, latestMessage]);
 
       for await (const chunk of newStream) {
         console.log(chunk);
-        if (chunk.choices[0].finish_reason) {
-          console.log(
-            "finishing stream with reason:",
-            chunk.choices[0].finish_reason
-          );
-          return chunk.choices[0].finish_reason;
-        } else if (chunk.choices[0].delta.tool_calls?.length) {
-          console.log("tool call detected in chunk:", chunk);
+
+        const isToolCall =
+          chunk.choices[0] &&
+          (chunk.choices[0].delta.tool_calls?.length ||
+            chunk.choices[0].finish_reason === "tool_calls");
+
+        if (isToolCall) {
+          // console.log("tool call detected in chunk:", chunk);
           await handleToolCall(chunk);
-        } else {
+        } else if (chunk.choices[0]) {
           latestMessage.content += chunk.choices[0].delta.content || "";
           setMessages((prev) => {
             const updatedMessages = [...prev];
             updatedMessages[updatedMessages.length - 1] = latestMessage;
             return updatedMessages;
           });
+        }
+
+        if (chunk.choices?.[0]?.finish_reason) {
+          console.log(
+            "finishing stream with reason:",
+            chunk.choices[0].finish_reason
+          );
+          return chunk.choices[0].finish_reason;
         }
       }
     };
@@ -209,6 +158,7 @@ export const AiChatProvider = ({
     ac.signal,
     cancelStream,
     client.ai.streamOpenAi,
+    handleToolCall,
     messages,
     stream,
     tools,
@@ -218,7 +168,7 @@ export const AiChatProvider = ({
     const userMessage: ChatCompletionMessageParam = {
       role: "user",
       content: input,
-      name: "user",
+      // name: "user",
     };
     setMessages((prev) => [...prev, userMessage]);
   };
