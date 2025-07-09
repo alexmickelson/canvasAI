@@ -64,7 +64,7 @@ export async function getAllCoursesFromDatabase(): Promise<CanvasCourse[]> {
 }
 
 export async function syncAllCourses() {
-  const courses = await getAllActiveCanvasCourses();
+  const courses = await getAllCoursesWithTerm();
   await syncTerms(courses);
   await Promise.all(
     courses.map(async (c) => {
@@ -73,13 +73,25 @@ export async function syncAllCourses() {
   );
 }
 
-async function getAllActiveCanvasCourses(): Promise<CanvasCourse[]> {
+async function getAllCoursesWithTerm(): Promise<CanvasCourse[]> {
   const courses = await paginatedRequest<CanvasCourse[]>({
     url: `${canvasApi}/courses`,
-    params: { enrollment_state: "active", include: "term" },
+    params: { include: "term" },
+    // params: { enrollment_state: "active", include: "term" },
   });
 
-  return courses;
+  const validatedCourses = courses
+    .filter((course) => {
+      try {
+        CanvasCourseSchema.parse(course);
+        return true;
+      } catch (err) {
+        console.warn("Could not parse course:", course, err);
+        return false;
+      }
+    })
+    .map((course) => CanvasCourseSchema.parse(course));
+  return validatedCourses;
 }
 
 async function storeCourseInDatabase(course: CanvasCourse) {

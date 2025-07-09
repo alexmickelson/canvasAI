@@ -21,13 +21,22 @@ app.use(
     router: appRouter,
     createContext: () => ({}),
     onError({ error, type, path, input }) {
-      console.error(
-        `[tRPC:${type}] "${String(path)}" failed. Input: ${JSON.stringify(
-          input
-        )} Error: ${error.message}`
-      );
+      const hasPath = typeof path !== "undefined";
+      const hasInput = typeof input !== "undefined";
+      const errorMsg = `[tRPC:${type}]${
+        hasPath ? ` "${String(path)}"` : ""
+      } failed.${hasInput ? ` Input: ${JSON.stringify(input)}` : ""} Error: ${
+        error.message
+      }`;
+      console.error(errorMsg);
       if (error.cause) {
         console.error(error.cause);
+      }
+      // Only re-throw if path and input are known
+      if (hasPath && hasInput) {
+        throw new Error(
+          `${errorMsg}${error.cause ? `\nCause: ${error.cause}` : ""}`
+        );
       }
     },
   })

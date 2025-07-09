@@ -8,6 +8,14 @@ import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
 // const ollamaUrl = "http://openwebui.bison-python.ts.net:11434/v1";
 const ollamaUrl = "http://openwebui.bison-python.ts.net:11434/v1";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const openaiUrl = process.env.OPENAI_URL;
+if (!openaiUrl) throw new Error("OPENAI_URL environment variable is not set");
+const openaiKey = process.env.OPENAI_KEY;
+if (!openaiKey) throw new Error("OPENAI_KEY environment variable is not set");
 
 export const aiRequestSchema = z.object({
   context: z.string(),
@@ -59,9 +67,14 @@ export const aiRouter = {
       const abortController = ctx?.signal ? undefined : new AbortController();
       const signal = ctx?.signal || abortController?.signal;
 
+      // const openai = new OpenAI({
+      //   baseURL: ollamaUrl,
+      //   apiKey: "ollama",
+      // });
+
       const openai = new OpenAI({
-        baseURL: ollamaUrl,
-        apiKey: "ollama",
+        baseURL: openaiUrl,
+        apiKey: openaiKey,
       });
 
       const stream = await openai.chat.completions.stream({

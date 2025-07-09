@@ -7,8 +7,7 @@
 
 html,
 body {
-  @apply 
-    bg-white 
+  @apply bg-white 
     dark:bg-gray-950;
 
   @media (prefers-color-scheme: dark) {
@@ -22,8 +21,7 @@ h3,
 h4,
 h5,
 h6 {
-  @apply 
-    font-semibold 
+  @apply font-semibold 
     text-xl 
     sm:text-2xl 
     md:text-3xl 
@@ -31,14 +29,12 @@ h6 {
 }
 
 p {
-  @apply 
-    text-base 
+  @apply text-base 
     leading-relaxed;
 }
 
-button {
-  @apply 
-    py-2 
+button:not(.unstyled) {
+  @apply py-2 
     px-4 
     bg-blue-900 
     hover:bg-slate-700 
@@ -47,7 +43,6 @@ button {
     rounded 
     focus:outline-none;
 }
-
 
 pre,
 code {

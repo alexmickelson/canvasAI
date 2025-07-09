@@ -1,5 +1,6 @@
 import { db } from "../dbUtils";
 import type { CanvasCourse, CanvasTerm } from "./canvasCourseService";
+import { CanvasTermSchema } from "./canvasCourseService";
 
 async function storeTermInDatabase(term: CanvasTerm) {
   await db.none(
@@ -22,7 +23,7 @@ export async function getTermsFromDatabase(): Promise<CanvasTerm[]> {
       from terms
       order by id desc`
   );
-  return rows.map((row) => row.json);
+  return rows.map((row) => CanvasTermSchema.parse(row.json));
 }
 
 export async function syncTerms(courses: CanvasCourse[]) {

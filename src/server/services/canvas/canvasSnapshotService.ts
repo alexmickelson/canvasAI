@@ -45,6 +45,7 @@ async function syncPrep(termName: string) {
 
   const terms = await getTermsFromDatabase();
   const term = terms.find((t) => t.name === termName);
+  // console.log("snapshot term", term);
   if (!term) {
     throw new Error(`Term with name "${termName}" not found`);
   }
@@ -52,6 +53,8 @@ async function syncPrep(termName: string) {
   const termCourses = courses.filter(
     (course) => course.enrollment_term_id === term?.id
   );
+
+  // console.log("snapshot courses", termCourses);
 
   return termCourses;
 }

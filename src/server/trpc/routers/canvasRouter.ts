@@ -67,7 +67,8 @@ export const canvasRouter = {
     }),
 
   terms: publicProcedure.query(async () => {
-    return await getTermsFromDatabase();
+    const terms = await getTermsFromDatabase();
+    return terms.sort((a, b) => b.id - a.id);
   }),
 
   modules: publicProcedure

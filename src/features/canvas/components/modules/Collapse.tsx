@@ -5,19 +5,21 @@ interface CollapseProps {
   header: ReactNode;
   children: ReactNode;
   defaultOpen?: boolean;
+  headerClassName?: string;
 }
 
 export const Collapse: FC<CollapseProps> = ({
   header,
   children,
   defaultOpen = false,
+  headerClassName = "",
 }) => {
   const [expanded, setExpanded] = useState(defaultOpen);
 
   return (
     <div className=" p-3 rounded">
       <div
-        className="flex items-center cursor-pointer focus:outline-none"
+        className={`flex items-center cursor-pointer focus:outline-none ${headerClassName}`}
         onClick={() => setExpanded((e) => !e)}
         aria-expanded={expanded}
         role="button"

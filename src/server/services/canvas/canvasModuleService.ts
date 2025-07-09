@@ -133,6 +133,7 @@ export async function syncModulesForCourse(
   courseId: number,
   syncJobId: number
 ) {
+  console.log("requesting modules for course", courseId, syncJobId);
   const modules = await getAllModulesInCourse(courseId);
   console.log("got modules from canvas", modules.length);
   await Promise.all(

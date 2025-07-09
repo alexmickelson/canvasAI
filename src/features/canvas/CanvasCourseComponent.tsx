@@ -31,18 +31,15 @@ export const CanvasCourseComponent: FC<{ course: CanvasCourse }> = ({
 
   return (
     <div className="bg-slate-900 m-2 p-2 rounded">
-      <div>{course.name}</div>
-      <div className="bg-slate-800 rounded">
-        <Collapse header={<span>Show/Hide Modules</span>}>
-          {assignmentsByModule?.map(({ module, assignments }) => (
-            <CanvasModuleComponent
-              key={module.id}
-              module={module}
-              assignments={assignments}
-            />
-          ))}
-        </Collapse>
-      </div>
+      <Collapse header={<div className="">{course.name}</div>} headerClassName="bg-slate-800 p-3 rounded">
+        {assignmentsByModule?.map(({ module, assignments }) => (
+          <CanvasModuleComponent
+            key={module.id}
+            module={module}
+            assignments={assignments}
+          />
+        ))}
+      </Collapse>
     </div>
   );
 };
