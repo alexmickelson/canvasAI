@@ -61,7 +61,7 @@ export function useHandleToolCall({
         const result = await chosenTool.fn(paramsString);
 
         console.log("tool result:", result);
-       
+
         const toolRequestMessage: ChatCompletionMessageParam = {
           role: "assistant",
           content: JSON.stringify({
@@ -79,7 +79,7 @@ export function useHandleToolCall({
         const toolMessage: ChatCompletionMessageParam = {
           role: "tool",
           content: result,
-          // tool_call_id: toolId,
+          tool_call_id: toolId,
         };
         setMessages((prev) => [
           ...prev.slice(0, -1),
