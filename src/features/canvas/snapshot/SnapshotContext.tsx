@@ -47,4 +47,3 @@ export const SnapshotProvider = ({ children }: { children: ReactNode }) => {
     </SnapshotContext.Provider>
   );
 };
-

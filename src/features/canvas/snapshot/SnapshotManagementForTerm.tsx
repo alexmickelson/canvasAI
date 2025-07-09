@@ -6,11 +6,13 @@ import {
 import { useTRPC, invalidateQueries } from "../../../server/trpc/trpcClient";
 import { useTermContext } from "../termSelection/TermContext";
 import type { SyncJob } from "../../../server/services/canvas/canvasSnapshotService";
+import { useSnapshotContext } from "./SnapshotContext";
 
 export default function SnapshotManagementForTerm() {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const { term } = useTermContext();
+  const { selectedSnapshot, setSelectedSnapshot } = useSnapshotContext();
 
   // Only fetch snapshots for the selected term
   const { data: snapshots } = useSuspenseQuery(
@@ -50,6 +52,7 @@ export default function SnapshotManagementForTerm() {
             <div className="w-40 px-3 py-2">Started</div>
             <div className="w-40 px-3 py-2">Completed</div>
             <div className="flex-1 px-3 py-2">Message</div>
+            <div className="w-32 px-3 py-2">Select</div>
           </div>
           {Array.isArray(snapshotsForTerm) && snapshotsForTerm.length > 0 ? (
             snapshotsForTerm.map((snap: SyncJob) => (
@@ -85,6 +88,18 @@ export default function SnapshotManagementForTerm() {
                 </div>
                 <div className="flex-1 px-3 py-2 text-gray-700 dark:text-gray-300 max-w-xs truncate">
                   {snap.message || "-"}
+                </div>
+                <div className="w-32 px-3 py-2 flex justify-center">
+                  {selectedSnapshot?.id === snap.id ? (
+                    <span className="text-slate-400">Selected</span>
+                  ) : (
+                    <button
+                      className=""
+                      onClick={() => setSelectedSnapshot(snap)}
+                    >
+                      select
+                    </button>
+                  )}
                 </div>
               </div>
             ))
