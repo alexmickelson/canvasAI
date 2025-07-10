@@ -98,14 +98,17 @@ export const aiRouter = {
           yield chunk;
         }
       } catch (e) {
-        console.log("stream config", {
-          model: aiModel,
-          messages: input.messages,
-          stream: true,
-          tool_choice: "auto",
-          tools: [...input.tools],
-          signal,
-        });
+        console.log(
+          "stream config",
+          JSON.stringify({
+            model: aiModel,
+            messages: input.messages,
+            stream: true,
+            tool_choice: "auto",
+            tools: [...input.tools],
+            signal,
+          })
+        );
         throw e;
       } finally {
         console.log("Stream finished, in finally block");

@@ -1,0 +1,76 @@
+
+
+POST https://copilot.alexmickelson.guru/chat/completions
+
+{
+  "model": "gpt-4.1",
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a data analyst for a college professor. Use the database schema provided to you to answer questions about the data and create charts.\n\n<details>\n<summary>Database Schema</summary>\n<schema>\n#### terms\n\n- CREATE TABLE enrollments (\n  id bigint NOT NULL,\n  course_id bigint,\n  sis_course_id text,\n  course_integration_id text,\n  course_section_id bigint,\n  section_integration_id text,\n  sis_account_id text,\n  sis_section_id text,\n  sis_user_id text,\n  enrollment_state text,\n  limit_privileges_to_course_section boolean,\n  sis_import_id bigint,\n  root_account_id bigint,\n  type text,\n  user_id bigint,\n  associated_user_id bigint,\n  role text,\n  role_id bigint,\n  created_at timestamp without time zone,\n  updated_at timestamp without time zone,\n  start_at timestamp without time zone,\n  end_at timestamp without time zone,\n  last_activity_at timestamp without time zone,\n  last_attended_at timestamp without time zone,\n  total_activity_time integer,\n  html_url text,\n  grades jsonb,\n  user jsonb,\n  override_grade text,\n  override_score numeric,\n  unposted_current_grade text,\n  unposted_final_grade text,\n  unposted_current_score text,\n  unposted_final_score text,\n  has_grading_periods boolean,\n  totals_for_all_grading_periods_option boolean,\n  current_grading_period_title text,\n  current_grading_period_id bigint,\n  current_period_override_grade text,\n  current_period_override_score numeric,\n  current_period_unposted_current_score numeric,\n  current_period_unposted_final_score numeric,\n  current_period_unposted_current_grade text,\n  current_period_unposted_final_grade text,\n  sync_job_id bigint,\n  original_record jsonb\n);\n#### courses\n\n- CREATE TABLE enrollments (\n  id bigint NOT NULL,\n  course_id bigint,\n  sis_course_id text,\n  course_integration_id text,\n  course_section_id bigint,\n  section_integration_id text,\n  sis_account_id text,\n  sis_section_id text,\n  sis_user_id text,\n  enrollment_state text,\n  limit_privileges_to_course_section boolean,\n  sis_import_id bigint,\n  root_account_id bigint,\n  type text,\n  user_id bigint,\n  associated_user_id bigint,\n  role text,\n  role_id bigint,\n  created_at timestamp without time zone,\n  updated_at timestamp without time zone,\n  start_at timestamp without time zone,\n  end_at timestamp without time zone,\n  last_activity_at timestamp without time zone,\n  last_attended_at timestamp without time zone,\n  total_activity_time integer,\n  html_url text,\n  grades jsonb,\n  user jsonb,\n  override_grade text,\n  override_score numeric,\n  unposted_current_grade text,\n  unposted_final_grade text,\n  unposted_current_score text,\n  unposted_final_score text,\n  has_grading_periods boolean,\n  totals_for_all_grading_periods_option boolean,\n  current_grading_period_title text,\n  current_grading_period_id bigint,\n  current_period_override_grade text,\n  current_period_override_score numeric,\n  current_period_unposted_current_score numeric,\n  current_period_unposted_final_score numeric,\n  current_period_unposted_current_grade text,\n  current_period_unposted_final_grade text,\n  sync_job_id bigint,\n  original_record jsonb\n);\n#### assignments\n\n- CREATE TABLE enrollments (\n  id bigint NOT NULL,\n  course_id bigint,\n  sis_course_id text,\n  course_integration_id text,\n  course_section_id bigint,\n  section_integration_id text,\n  sis_account_id text,\n  sis_section_id text,\n  sis_user_id text,\n  enrollment_state text,\n  limit_privileges_to_course_section boolean,\n  sis_import_id bigint,\n  root_account_id bigint,\n  type text,\n  user_id bigint,\n  associated_user_id bigint,\n  role text,\n  role_id bigint,\n  created_at timestamp without time zone,\n  updated_at timestamp without time zone,\n  start_at timestamp without time zone,\n  end_at timestamp without time zone,\n  last_activity_at timestamp without time zone,\n  last_attended_at timestamp without time zone,\n  total_activity_time integer,\n  html_url text,\n  grades jsonb,\n  user jsonb,\n  override_grade text,\n  override_score numeric,\n  unposted_current_grade text,\n  unposted_final_grade text,\n  unposted_current_score text,\n  unposted_final_score text,\n  has_grading_periods boolean,\n  totals_for_all_grading_periods_option boolean,\n  current_grading_period_title text,\n  current_grading_period_id bigint,\n  current_period_override_grade text,\n  current_period_override_score numeric,\n  current_period_unposted_current_score numeric,\n  current_period_unposted_final_score numeric,\n  current_period_unposted_current_grade text,\n  current_period_unposted_final_grade text,\n  sync_job_id bigint,\n  original_record jsonb\n);\n#### sync_job\n\n- CREATE TABLE enrollments (\n  id bigint NOT NULL,\n  course_id bigint,\n  sis_course_id text,\n  course_integration_id text,\n  course_section_id bigint,\n  section_integration_id text,\n  sis_account_id text,\n  sis_section_id text,\n  sis_user_id text,\n  enrollment_state text,\n  limit_privileges_to_course_section boolean,\n  sis_import_id bigint,\n  root_account_id bigint,\n  type text,\n  user_id bigint,\n  associated_user_id bigint,\n  role text,\n  role_id bigint,\n  created_at timestamp without time zone,\n  updated_at timestamp without time zone,\n  start_at timestamp without time zone,\n  end_at timestamp without time zone,\n  last_activity_at timestamp without time zone,\n  last_attended_at timestamp without time zone,\n  total_activity_time integer,\n  html_url text,\n  grades jsonb,\n  user jsonb,\n  override_grade text,\n  override_score numeric,\n  unposted_current_grade text,\n  unposted_final_grade text,\n  unposted_current_score text,\n  unposted_final_score text,\n  has_grading_periods boolean,\n  totals_for_all_grading_periods_option boolean,\n  current_grading_period_title text,\n  current_grading_period_id bigint,\n  current_period_override_grade text,\n  current_period_override_score numeric,\n  current_period_unposted_current_score numeric,\n  current_period_unposted_final_score numeric,\n  current_period_unposted_current_grade text,\n  current_period_unposted_final_grade text,\n  sync_job_id bigint,\n  original_record jsonb\n);\n#### module_items\n\n- CREATE TABLE enrollments (\n  id bigint NOT NULL,\n  course_id bigint,\n  sis_course_id text,\n  course_integration_id text,\n  course_section_id bigint,\n  section_integration_id text,\n  sis_account_id text,\n  sis_section_id text,\n  sis_user_id text,\n  enrollment_state text,\n  limit_privileges_to_course_section boolean,\n  sis_import_id bigint,\n  root_account_id bigint,\n  type text,\n  user_id bigint,\n  associated_user_id bigint,\n  role text,\n  role_id bigint,\n  created_at timestamp without time zone,\n  updated_at timestamp without time zone,\n  start_at timestamp without time zone,\n  end_at timestamp without time zone,\n  last_activity_at timestamp without time zone,\n  last_attended_at timestamp without time zone,\n  total_activity_time integer,\n  html_url text,\n  grades jsonb,\n  user jsonb,\n  override_grade text,\n  override_score numeric,\n  unposted_current_grade text,\n  unposted_final_grade text,\n  unposted_current_score text,\n  unposted_final_score text,\n  has_grading_periods boolean,\n  totals_for_all_grading_periods_option boolean,\n  current_grading_period_title text,\n  current_grading_period_id bigint,\n  current_period_override_grade text,\n  current_period_override_score numeric,\n  current_period_unposted_current_score numeric,\n  current_period_unposted_final_score numeric,\n  current_period_unposted_current_grade text,\n  current_period_unposted_final_grade text,\n  sync_job_id bigint,\n  original_record jsonb\n);\n#### submissions\n\n- CREATE TABLE enrollments (\n  id bigint NOT NULL,\n  course_id bigint,\n  sis_course_id text,\n  course_integration_id text,\n  course_section_id bigint,\n  section_integration_id text,\n  sis_account_id text,\n  sis_section_id text,\n  sis_user_id text,\n  enrollment_state text,\n  limit_privileges_to_course_section boolean,\n  sis_import_id bigint,\n  root_account_id bigint,\n  type text,\n  user_id bigint,\n  associated_user_id bigint,\n  role text,\n  role_id bigint,\n  created_at timestamp without time zone,\n  updated_at timestamp without time zone,\n  start_at timestamp without time zone,\n  end_at timestamp without time zone,\n  last_activity_at timestamp without time zone,\n  last_attended_at timestamp without time zone,\n  total_activity_time integer,\n  html_url text,\n  grades jsonb,\n  user jsonb,\n  override_grade text,\n  override_score numeric,\n  unposted_current_grade text,\n  unposted_final_grade text,\n  unposted_current_score text,\n  unposted_final_score text,\n  has_grading_periods boolean,\n  totals_for_all_grading_periods_option boolean,\n  current_grading_period_title text,\n  current_grading_period_id bigint,\n  current_period_override_grade text,\n  current_period_override_score numeric,\n  current_period_unposted_current_score numeric,\n  current_period_unposted_final_score numeric,\n  current_period_unposted_current_grade text,\n  current_period_unposted_final_grade text,\n  sync_job_id bigint,\n  original_record jsonb\n);\n#### modules\n\n- CREATE TABLE enrollments (\n  id bigint NOT NULL,\n  course_id bigint,\n  sis_course_id text,\n  course_integration_id text,\n  course_section_id bigint,\n  section_integration_id text,\n  sis_account_id text,\n  sis_section_id text,\n  sis_user_id text,\n  enrollment_state text,\n  limit_privileges_to_course_section boolean,\n  sis_import_id bigint,\n  root_account_id bigint,\n  type text,\n  user_id bigint,\n  associated_user_id bigint,\n  role text,\n  role_id bigint,\n  created_at timestamp without time zone,\n  updated_at timestamp without time zone,\n  start_at timestamp without time zone,\n  end_at timestamp without time zone,\n  last_activity_at timestamp without time zone,\n  last_attended_at timestamp without time zone,\n  total_activity_time integer,\n  html_url text,\n  grades jsonb,\n  user jsonb,\n  override_grade text,\n  override_score numeric,\n  unposted_current_grade text,\n  unposted_final_grade text,\n  unposted_current_score text,\n  unposted_final_score text,\n  has_grading_periods boolean,\n  totals_for_all_grading_periods_option boolean,\n  current_grading_period_title text,\n  current_grading_period_id bigint,\n  current_period_override_grade text,\n  current_period_override_score numeric,\n  current_period_unposted_current_score numeric,\n  current_period_unposted_final_score numeric,\n  current_period_unposted_current_grade text,\n  current_period_unposted_final_grade text,\n  sync_job_id bigint,\n  original_record jsonb\n);\n#### enrollments\n\n- CREATE TABLE enrollments (\n  id bigint NOT NULL,\n  course_id bigint,\n  sis_course_id text,\n  course_integration_id text,\n  course_section_id bigint,\n  section_integration_id text,\n  sis_account_id text,\n  sis_section_id text,\n  sis_user_id text,\n  enrollment_state text,\n  limit_privileges_to_course_section boolean,\n  sis_import_id bigint,\n  root_account_id bigint,\n  type text,\n  user_id bigint,\n  associated_user_id bigint,\n  role text,\n  role_id bigint,\n  created_at timestamp without time zone,\n  updated_at timestamp without time zone,\n  start_at timestamp without time zone,\n  end_at timestamp without time zone,\n  last_activity_at timestamp without time zone,\n  last_attended_at timestamp without time zone,\n  total_activity_time integer,\n  html_url text,\n  grades jsonb,\n  user jsonb,\n  override_grade text,\n  override_score numeric,\n  unposted_current_grade text,\n  unposted_final_grade text,\n  unposted_current_score text,\n  unposted_final_score text,\n  has_grading_periods boolean,\n  totals_for_all_grading_periods_option boolean,\n  current_grading_period_title text,\n  current_grading_period_id bigint,\n  current_period_override_grade text,\n  current_period_override_score numeric,\n  current_period_unposted_current_score numeric,\n  current_period_unposted_final_score numeric,\n  current_period_unposted_current_grade text,\n  current_period_unposted_final_grade text,\n  sync_job_id bigint,\n  original_record jsonb\n);\n</schema>\n</details>\n"
+    },
+    { "role": "user", "content": "what courses are available in spring 2025"},
+    {
+      "role": "assistant",
+      "tool_calls": [
+        {
+          "id": "chatcmpl-BrnajKgA8hZUKLjwk6OBQrayYaCNi",
+          "type": "function",
+          "function": {
+            "name": "run_sql_query",
+            "arguments": "{\"id\":\"chatcmpl-BrnajKgA8hZUKLjwk6OBQrayYaCNi\",\"type\":\"function\",\"function\":{\"name\":\"run_sql_query\",\"arguments\":{\"query\":\"SELECT course_id, sis_course_id, created_at FROM enrollments WHERE sis_course_id ILIKE '%spring_2025%' LIMIT 3;\"}}}"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "No results found for the query.",
+      "tool_call_id": "chatcmpl-BrnajKgA8hZUKLjwk6OBQrayYaCNi"
+    }
+  ],
+  "stream": true,
+  "tool_choice": "auto",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "set_sql",
+        "description": "Set the SQL query to run",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "sql": { "type": "string" },
+            "chartType": {
+              "type": "string",
+              "enum": ["bar", "line", "scatter"]
+            },
+            "xField": { "type": "string" },
+            "yField": { "type": "string" },
+            "title": { "type": "string" }
+          },
+          "required": ["sql", "chartType", "xField", "yField", "title"],
+          "additionalProperties": false,
+          "$schema": "https://json-schema.org/draft/2019-09/schema#"
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "run_sql_query",
+        "description": "\nWrite and execute SQL queries in read-only mode. Returns the query result as JSON. Write PostgreSQL queries. \nUse this tool proactively to verify your knowledge of the data.\n\n- When selecting, only select the first 3 rows to help you undestand the data.\n- never select * from a table, always select specific columns.\n",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "query": { "type": "string", "description": "SQL query to run" }
+          },
+          "required": ["query"],
+          "additionalProperties": false,
+          "$schema": "https://json-schema.org/draft/2019-09/schema#"
+        }
+      }
+    }
+  ],
+  "signal": {}
+}

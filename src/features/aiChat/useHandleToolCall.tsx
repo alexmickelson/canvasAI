@@ -64,15 +64,16 @@ export function useHandleToolCall({
 
         const toolRequestMessage: ChatCompletionMessageParam = {
           role: "assistant",
-          content: JSON.stringify({
-            id: toolId,
-            type: "function",
-            function: {
-              name: chosenTool.name,
-              arguments: paramsString,
+          tool_calls: [
+            {
+              id: toolId,
+              type: "function",
+              function: {
+                name: chosenTool.name,
+                arguments: paramsString,
+              },
             },
-          }),
-          // name: "assistant",
+          ],
         };
 
         // Send the tool result back to the LLM as a tool message
