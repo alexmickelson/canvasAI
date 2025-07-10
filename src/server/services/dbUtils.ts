@@ -33,16 +33,19 @@ export async function executeReadOnlySQL(sql: string) {
 
 export async function listDbSchema() {
   // Get all table names in the public schema
-  const tables = await executeReadOnlySQL(`
+  const tablesResult = await db.any(`
     SELECT tablename
     FROM pg_catalog.pg_tables
     WHERE schemaname = 'public'
   `);
+  const tables = tablesResult.map(
+    (row: { tablename: string }) => row.tablename
+  );
 
   // For each table, get its DDL using a custom query
   const ddls = await Promise.all(
-    tables.map(async (row: { tablename: string }) => {
-      const [{ ddl }] = await executeReadOnlySQL(`
+    tables.map(async (t) => {
+      const [{ ddl }] = await db.any(`
         SELECT 'CREATE TABLE ' || tablename || E' (\n' ||
           string_agg('  ' || column_name || ' ' || type || 
             CASE WHEN is_nullable = 'NO' THEN ' NOT NULL' ELSE '' END, E',\n') ||
@@ -54,16 +57,17 @@ export async function listDbSchema() {
             pg_catalog.format_type(a.atttypid, a.atttypmod) as type,
             CASE WHEN a.attnotnull THEN 'NO' ELSE 'YES' END as is_nullable
           FROM pg_class c
-          JOIN pg_namespace n ON n.oid = c.relnamespace
-          JOIN pg_attribute a ON a.attrelid = c.oid
+            JOIN pg_namespace n ON n.oid = c.relnamespace
+            JOIN pg_attribute a ON a.attrelid = c.oid
           WHERE c.relkind = 'r'
+            AND c.relname =  $<tableName>
             AND n.nspname = 'public'
             AND a.attnum > 0
             AND NOT a.attisdropped
         ) cols
         GROUP BY tablename
-      `);
-      return { table: row.tablename, ddl };
+      `, {tableName: t});
+      return { table: t, ddl };
     })
   );
   return ddls;

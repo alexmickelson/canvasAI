@@ -3,40 +3,17 @@ import type {
   ChatCompletionMessage,
   ChatCompletionMessageParam,
 } from "openai/resources/index.mjs";
-import { useEffect, useState, type FC } from "react";
+import type { DetailsHTMLAttributes, HTMLAttributes, FC } from "react";
+import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 
 export const Message = ({ msg }: { msg: ChatCompletionMessageParam }) => {
-  const [first, setFirst] = useState(false); // client side hack
-  useEffect(() => {
-    setFirst(true);
-  }, []);
-
-  const isToolCall =
-    msg.role === "assistant" && (msg.tool_calls || []).length > 0;
-
   if (msg.role === "tool") {
-    let parsedContent: unknown = msg.content;
-    try {
-      parsedContent =
-        typeof msg.content === "string" ? JSON.parse(msg.content) : msg.content;
-    } catch {
-      // fallback to raw content
-    }
-    return (
-      <div className="bg-gray-800 rounded p-2 my-2 text-left">
-        <div>
-          <span className="font-semibold text-blue-400">Tool Call Result</span>
-        </div>
-        <div className="mt-2">
-          <span className="font-semibold text-yellow-400">Result:</span>{" "}
-          <pre className="bg-gray-900 p-2 rounded text-yellow-300 whitespace-pre-wrap break-all">
-            {typeof parsedContent === "object" && parsedContent !== null
-              ? JSON.stringify(parsedContent, null, 2)
-              : String(parsedContent)}
-          </pre>
-        </div>
-      </div>
-    );
+    return <ToolResult content={msg.content} />;
+  }
+
+  if (msg.role === "system") {
+    return <SystemMessage msg={msg} />;
   }
 
   return (
@@ -45,37 +22,58 @@ export const Message = ({ msg }: { msg: ChatCompletionMessageParam }) => {
         msg.role === "user" ? "text-right" : "text-left"
       }`}
     >
-      {first && (
-        <>
-          <div className="text-gray-400">{msg.role}:</div>
-          <div className="text-gray-200">
-            {msg.content?.toString().startsWith("<think>") && (
-              <details className="mb-2">
-                <summary className="cursor-pointer text-gray-400">
-                  Thoughts
-                  <ThinkingSpinner content={msg.content?.toString()} />
-                </summary>
-                <div
-                  className="pl-4 text-gray-400"
-                  dangerouslySetInnerHTML={{
-                    __html: marked(msg.content.toString().split("</think>")[0]),
-                  }}
-                ></div>
-              </details>
-            )}
+      <div className="text-gray-400">{msg.role}:</div>
+      <div className="text-gray-200">
+        {msg.content?.toString().startsWith("<think>") && (
+          <details className="mb-2">
+            <summary className="cursor-pointer text-gray-400">
+              Thoughts
+              <ThinkingSpinner content={msg.content?.toString()} />
+            </summary>
+            <div
+              className="pl-4 text-gray-400"
+              dangerouslySetInnerHTML={{
+                __html: marked(msg.content.toString().split("</think>")[0]),
+              }}
+            ></div>
+          </details>
+        )}
 
-            {isToolCall ? (
-              <ToolMessage msg={msg as ChatCompletionMessage} />
-            ) : (
-              <div
-                dangerouslySetInnerHTML={{
-                  __html: getMessageContent(msg),
-                }}
-              />
-            )}
-          </div>
-        </>
-      )}
+        {msg.role === "assistant" && (msg.tool_calls || []).length > 0 ? (
+          <ToolMessage msg={msg as ChatCompletionMessage} />
+        ) : (
+          <div
+            dangerouslySetInnerHTML={{
+              __html: getMessageContent(msg),
+            }}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+const components = {
+  details(props: DetailsHTMLAttributes<HTMLDetailsElement>) {
+    // ReactMarkdown passes children as an array, so we need to handle that
+    return <details {...props}>{props.children}</details>;
+  },
+  summary(props: HTMLAttributes<HTMLElement>) {
+    return <summary {...props}>{props.children}</summary>;
+  },
+};
+const SystemMessage: FC<{ msg: ChatCompletionMessageParam }> = ({ msg }) => {
+  const content = msg.content?.toString() || "";
+  return (
+    <div className="p-2 my-2 text-left text-gray-300">
+      <span className="font-semibold text-purple-400">System:</span>{" "}
+      <ReactMarkdown
+        components={components}
+        skipHtml={false}
+        rehypePlugins={[rehypeRaw]}
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 };
@@ -97,6 +95,34 @@ const ToolMessage: FC<{ msg: ChatCompletionMessage }> = ({ msg }) => {
       <div>
         <span className="font-semibold text-yellow-400">Result:</span>{" "}
         {msg.content}
+      </div>
+    </div>
+  );
+};
+
+const ToolResult: FC<{ content: unknown }> = ({ content }) => {
+  const parsedContent: unknown =
+    typeof content === "string"
+      ? (() => {
+          try {
+            return JSON.parse(content);
+          } catch {
+            return content;
+          }
+        })()
+      : content;
+  return (
+    <div className="bg-gray-800 rounded p-2 my-2 text-left">
+      <div>
+        <span className="font-semibold text-blue-400">Tool Call Result</span>
+      </div>
+      <div className="mt-2">
+        <span className="font-semibold text-yellow-400">Result:</span>{" "}
+        <pre className="bg-gray-900 p-2 rounded text-yellow-300 whitespace-pre-wrap break-all">
+          {typeof parsedContent === "object" && parsedContent !== null
+            ? JSON.stringify(parsedContent, null, 2)
+            : String(parsedContent)}
+        </pre>
       </div>
     </div>
   );

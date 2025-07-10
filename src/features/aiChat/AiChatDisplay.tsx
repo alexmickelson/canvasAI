@@ -1,4 +1,4 @@
-import { useState, type FC, useRef, useEffect } from "react";
+import { useState, type FC, useRef, useEffect, useMemo } from "react";
 import { useAiChat } from "./AiChatContext";
 import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { FaStopCircle } from "react-icons/fa";
@@ -10,6 +10,8 @@ export const AiChatDisplay: FC<{ title: string }> = ({ title }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
+
+  const orderedMessages = useMemo(() => messages.slice().reverse(), [messages]);
 
   const handleScroll = () => {
     const container = chatContainerRef.current;
@@ -28,11 +30,6 @@ export const AiChatDisplay: FC<{ title: string }> = ({ title }) => {
     }
   }, [messages, isAutoScrollEnabled]);
 
-  const handleSend = async () => {
-    await sendMessage(input);
-    setInput("");
-  };
-
   return (
     <div className="flex flex-col items-center p-1 bg-gray-900 h-full w-full rounded-lg">
       <h1 className="text-2xl font-bold mb-4">{title}</h1>
@@ -45,12 +42,11 @@ export const AiChatDisplay: FC<{ title: string }> = ({ title }) => {
       >
         <div className="flex flex-col-reverse">
           <div ref={messagesEndRef} />
-          {messages
-            .slice()
-            .reverse()
-            .map((msg: ChatCompletionMessageParam, index: number) => (
+          {orderedMessages.map(
+            (msg: ChatCompletionMessageParam, index: number) => (
               <Message key={index} msg={msg} />
-            ))}
+            )
+          )}
         </div>
       </div>
       <form
@@ -58,7 +54,8 @@ export const AiChatDisplay: FC<{ title: string }> = ({ title }) => {
         onSubmit={async (e) => {
           e.preventDefault();
           if (!isStreaming) {
-            await handleSend();
+            await sendMessage(input);
+            setInput("");
           }
         }}
       >
@@ -87,7 +84,7 @@ export const AiChatDisplay: FC<{ title: string }> = ({ title }) => {
               } else {
                 e.preventDefault();
                 if (!isStreaming) {
-                  handleSend();
+                  sendMessage(input).then(() => setInput(""));
                 }
               }
             }

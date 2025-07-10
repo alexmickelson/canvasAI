@@ -9,8 +9,10 @@ export const chartFromSqlParamsSchema = z.object({
   sql: z.string(),
   chartType: z.enum(["bar", "line", "scatter"]),
   xField: z.string(),
-  yField: z.string(),
+  yField: z.union([z.string(), z.array(z.string())]),
   title: z.string(),
+  xLabel: z.string().optional(),
+  yLabel: z.string().optional(),
 });
 
 export const ChartFromSql = ({
@@ -19,6 +21,8 @@ export const ChartFromSql = ({
   xField,
   yField,
   title,
+  xLabel,
+  yLabel,
 }: z.infer<typeof chartFromSqlParamsSchema>) => {
   const trpc = useTRPC();
   const { data, isLoading } = useSuspenseQuery(
@@ -27,22 +31,41 @@ export const ChartFromSql = ({
 
   const rows = data ?? [];
   const xKey = xField;
-  const yKey = yField;
+
+  const colorPalette = [
+    "#4bc0c0",
+    "#ff6384",
+    "#36a2eb",
+    "#ffce56",
+    "#9966ff",
+    "#ff9f40",
+    "#c9cbcf",
+  ];
+  const borderPalette = [
+    "#4bc0c0",
+    "#ff6384",
+    "#36a2eb",
+    "#ffce56",
+    "#9966ff",
+    "#ff9f40",
+    "#c9cbcf",
+  ];
+
+  // If yKey is an array, treat as multiple datasets, else single dataset
+  const yKeys = Array.isArray(yField) ? yField : [yField];
 
   const chartConfig: ChartConfiguration = {
     type: chartType,
     data: {
       labels: rows.map((row) => row[xKey]) || [],
-      datasets: [
-        {
-          label: title,
-          data: rows.map((row) => row[yKey]) || [],
-          backgroundColor: "rgba(75, 192, 192, 0.2)",
-          borderColor: "rgba(75, 192, 192, 1)",
-          borderWidth: 1,
-          showLine: chartType !== "scatter",
-        },
-      ],
+      datasets: yKeys.map((key, i) => ({
+        label: yKeys.length > 1 ? key : title,
+        data: rows.map((row) => row[key]) || [],
+        backgroundColor: colorPalette[i % colorPalette.length],
+        borderColor: borderPalette[i % borderPalette.length],
+        borderWidth: 1,
+        showLine: chartType !== "scatter",
+      })),
     },
     options: {
       responsive: true,
@@ -52,8 +75,18 @@ export const ChartFromSql = ({
       },
       scales:
         chartType === "scatter"
-          ? { x: { type: "linear", position: "bottom" } }
-          : {},
+          ? {
+              x: {
+                type: "linear",
+                position: "bottom",
+                title: xLabel ? { display: true, text: xLabel } : undefined,
+              },
+              y: yLabel ? { title: { display: true, text: yLabel } } : {},
+            }
+          : {
+              x: xLabel ? { title: { display: true, text: xLabel } } : {},
+              y: yLabel ? { title: { display: true, text: yLabel } } : {},
+            },
     },
   };
 

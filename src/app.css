@@ -60,3 +60,21 @@ code {
 pre code {
   @apply bg-transparent p-0 text-inherit;
 }
+
+details {
+  @apply rounded p-4 my-4 border border-gray-800;
+}
+
+summary {
+  @apply cursor-pointer font-semibold text-base outline-none rounded text-blue-400;
+  list-style: none;
+}
+
+details[open] summary {
+  @apply mb-2 text-blue-200;
+}
+/* details > *:not(summary) {
+  padding: 0.5rem;
+  overflow-y: auto;
+  max-height: 200px; 
+} */

@@ -15,7 +15,8 @@
 				"bradlc.vscode-tailwindcss",
 				"humao.rest-client",
 				"ms-python.python",
-				"ms-python.black-formatter"
+				"ms-python.black-formatter",
+				"JeronimoEkerdt.color-picker-universal"
 			]
 		}
 	},
