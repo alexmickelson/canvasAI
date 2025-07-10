@@ -44,7 +44,7 @@ button:not(.unstyled) {
     focus:outline-none;
 }
 
-pre,
+pre:not(.unstyled),
 code {
   @apply font-mono bg-gray-100 dark:bg-gray-800 text-sm rounded px-2 py-1;
 }

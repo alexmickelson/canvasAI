@@ -66,8 +66,6 @@ export const ChartFromSql = ({
 
   const createDatasets = () => {
     if (datasetGroup) {
-      const uniqueXValues = getUniqueLabels(rows, xField);
-      console.log("uniqueXValues", uniqueXValues);
 
       const groupedData: Record<string, Record<string, unknown>[]> =
         rows.reduce((acc, row) => {

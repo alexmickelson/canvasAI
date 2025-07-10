@@ -6,6 +6,7 @@ import type {
 import type { DetailsHTMLAttributes, HTMLAttributes, FC } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
+import { Collapse } from "../canvas/components/modules/Collapse";
 
 export const Message = ({ msg }: { msg: ChatCompletionMessageParam }) => {
   if (msg.role === "tool") {
@@ -117,12 +118,19 @@ const ToolResult: FC<{ content: unknown }> = ({ content }) => {
         <span className="font-semibold text-blue-400">Tool Call Result</span>
       </div>
       <div className="mt-2">
-        <span className="font-semibold text-yellow-400">Result:</span>{" "}
-        <pre className="bg-gray-900 p-2 rounded text-yellow-300 whitespace-pre-wrap break-all">
-          {typeof parsedContent === "object" && parsedContent !== null
-            ? JSON.stringify(parsedContent, null, 2)
-            : String(parsedContent)}
-        </pre>
+        <Collapse
+          header={
+            <span className="font-semibold text-yellow-400">Result:</span>
+          }
+        >
+          <div className="max-h-96 overflow-y-auto ">
+            <pre className="unstyled font-mono bg-slate-900 rounded text-yellow-300 whitespace-pre-wrap break-all">
+              {typeof parsedContent === "object" && parsedContent !== null
+                ? JSON.stringify(parsedContent, null, 2)
+                : String(parsedContent)}
+            </pre>
+          </div>
+        </Collapse>
       </div>
     </div>
   );

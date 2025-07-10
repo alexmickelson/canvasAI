@@ -14,7 +14,8 @@ export const AiChatDisplay: FC<{ title: string }> = ({ title }) => {
     }
   });
   const [historyIndex, setHistoryIndex] = useState<number | null>(null);
-  const { messages, sendMessage, cancelStream, isStreaming } = useAiChat();
+  const { messages, sendMessage, currentMessage, cancelStream, isStreaming } =
+    useAiChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [isAutoScrollEnabled, setIsAutoScrollEnabled] = useState(true);
@@ -55,6 +56,7 @@ export const AiChatDisplay: FC<{ title: string }> = ({ title }) => {
       >
         <div className="flex flex-col-reverse">
           <div ref={messagesEndRef} />
+          <div className="text-left">{currentMessage}</div>
           {orderedMessages.map(
             (msg: ChatCompletionMessageParam, index: number) => (
               <Message key={index} msg={msg} />

@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC, useTRPCClient } from "../../server/trpc/trpcClient";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { createAiTool } from "../../utils/createAiTool";
 import z from "zod";
 import { ChartFromSql, chartFromSqlParamsSchema } from "./ChartFromSql";
@@ -13,15 +13,17 @@ export const AiCharting = () => {
   const { data: tableDdls } = useSuspenseQuery(
     trpcQuery.db.listDbSchema.queryOptions()
   );
-  const schemaString = tableDdls
-    .map(
-      (t) => `#### ${t.table}\n\n\`\`\`sql
+
+  const systemPrompt = useMemo(() => {
+    console.log("recalculating system prompt");
+    const schemaString = tableDdls
+      .map(
+        (t) => `#### ${t.table}\n\n\`\`\`sql
 ${t.ddl}
 \`\`\``
-    )
-    .join("\n");
-
-  const systemPrompt = `You are a data analyst for a college professor. Use the database schema provided to you to answer questions about the data and create charts.
+      )
+      .join("\n");
+    return `You are a data analyst for a college professor. Use the database schema provided to you to answer questions about the data and create charts.
 
 <details>
 <summary>Database Schema</summary>
@@ -36,40 +38,34 @@ When a user asks about a course and your search yields multiple classes with sim
     Retrieve all classes/courses that match the search query.
     For each matching course, also retrieve its associated term (e.g., Fall 2023, Spring 2024) using the enrollment_term_id from the courses table and the name from the terms table.
     
-    If there is only one course in the most recent term, automatically use that course without asking the user.
-    
-    If there are multiple courses in the most recent term, present the user with a clearly formatted list, showing both the course name and its term (and, if useful, the course ID).
-    Ask the user to specify which course they mean before proceeding with any data retrieval or reporting.
-
-    Never proceed by picking a course automatically when multiple courses are in the same recent term.
-    Automatically select a course only when there is exactly one course in the most recent term.
-    Only continue once the user confirms their choice or a single course from the most recent term is automatically selected.
+    If there are multiple courses, select the one with the most recent term.
 </details>
-
-
 `;
+  }, [tableDdls]);
 
   const [chartConfig, setChartConfig] = useState<
     z.infer<typeof chartFromSqlParamsSchema> | undefined
   >();
 
-  const tools = [
-    createAiTool({
-      name: "sql_chart",
-      description: "Set the SQL query to use to create a chart.",
-      paramsSchema: chartFromSqlParamsSchema,
-      fn: async (params) => {
-        setChartConfig(params);
-        console.log("Setting SQL with params:", params);
-        return {
-          status: "success",
-          params: params,
-        };
-      },
-    }),
-    createAiTool({
-      name: "run_sql_query",
-      description: `
+  const tools = useMemo(() => {
+    console.log("recalculating tools");
+    return [
+      createAiTool({
+        name: "sql_chart",
+        description: "Set the SQL query to use to create a chart.",
+        paramsSchema: chartFromSqlParamsSchema,
+        fn: async (params) => {
+          setChartConfig(params);
+          console.log("Setting SQL with params:", params);
+          return {
+            status: "success",
+            params: params,
+          };
+        },
+      }),
+      createAiTool({
+        name: "run_sql_query",
+        description: `
 Write and execute SQL queries in read-only mode. Returns the query result as JSON. Write PostgreSQL queries. 
 Use this tool proactively to verify your knowledge of the data.
 
@@ -88,18 +84,19 @@ Use this tool proactively to verify your knowledge of the data.
 - Set datasetGroup to a column name (such as student_name) to display separate lines or bars for each unique value in that column,
     helping you compare groups (e.g., each student's grades over time) within the chart.
 `,
-      paramsSchema: z.object({
-        query: z.string().describe("SQL query to run"),
+        paramsSchema: z.object({
+          query: z.string().describe("SQL query to run"),
+        }),
+        fn: async ({ query }) => {
+          const result = await trpcClient.db.runSQL.query({ query });
+          if (result.length === 0) {
+            return "No results found for the query.";
+          }
+          return result;
+        },
       }),
-      fn: async ({ query }) => {
-        const result = await trpcClient.db.runSQL.query({ query });
-        if (result.length === 0) {
-          return "No results found for the query.";
-        }
-        return result;
-      },
-    }),
-  ];
+    ];
+  }, [trpcClient.db.runSQL]);
   return (
     <AiChatProvider systemPrompt={systemPrompt} tools={tools}>
       <div className="h-screen flex p-3">

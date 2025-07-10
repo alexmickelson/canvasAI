@@ -1,22 +1,43 @@
 import type OpenAI from "openai";
-import type {
-  ChatCompletionChunk,
-  ChatCompletionMessageParam,
-} from "openai/resources/index.mjs";
-import { useCallback } from "react";
+import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import { useCallback, type Dispatch, type SetStateAction } from "react";
 import type { AiTool } from "../../utils/createAiTool";
 import toast from "react-hot-toast";
 
 export function useHandleToolCall({
   tools,
-  setMessages,
+  setCurrentMessage,
 }: {
   tools: AiTool[];
-  setMessages: React.Dispatch<
-    React.SetStateAction<ChatCompletionMessageParam[]>
-  >;
+  setCurrentMessage: Dispatch<SetStateAction<string>>;
 }) {
-  const executeToolCalls = useCallback(
+  const executeToolCalls = useExecuteToolCalls(tools);
+
+  return useCallback(
+    async function (
+      chunk: OpenAI.Chat.Completions.ChatCompletionChunk,
+      stream: AsyncIterable<
+        OpenAI.Chat.Completions.ChatCompletionChunk,
+        void,
+        unknown
+      >
+    ) {
+      const { error, requestedTools } = await collectFunctionArgsFromChunks(
+        chunk,
+        stream,
+        setCurrentMessage
+      );
+      console.error("Error collecting function args:", error);
+      const results = await executeToolCalls(requestedTools);
+      return results
+
+    },
+    [executeToolCalls, setCurrentMessage]
+  );
+}
+
+function useExecuteToolCalls(tools: AiTool[]) {
+  return useCallback(
     async (
       requestedTools: Record<string, { args: string; functionName: string }>
     ) => {
@@ -72,33 +93,14 @@ export function useHandleToolCall({
     },
     [tools]
   );
-
-  return useCallback(
-    async function (
-      chunk: OpenAI.Chat.Completions.ChatCompletionChunk,
-      stream: AsyncIterable<
-        OpenAI.Chat.Completions.ChatCompletionChunk,
-        void,
-        unknown
-      >
-    ): Promise<ChatCompletionChunk> {
-      const { error, requestedTools } = await collectFunctionArgsFromChunks(
-        chunk,
-        stream
-      );
-      if (error) return chunk;
-      const results = await executeToolCalls(requestedTools);
-      setMessages((prev) => [...prev, ...results]);
-      return chunk;
-    },
-    [executeToolCalls, setMessages]
-  );
 }
 
-function processChunk(
+
+function processToolCallChunk(
   chunk: OpenAI.Chat.Completions.ChatCompletionChunk,
   requestedTools: Record<string, { args: string; functionName: string }>,
-  currentId: string
+  currentId: string,
+  setCurrentMessage: Dispatch<SetStateAction<string>>
 ): string {
   const toolCall = chunk.choices[0].delta.tool_calls?.[0];
   if (!toolCall) return currentId;
@@ -113,6 +115,7 @@ function processChunk(
       args: "",
       functionName: toolCall.function?.name ?? "",
     };
+    setCurrentMessage("prepparing to call tool: " + toolCall.function?.name);
     return toolCall.id;
   }
 
@@ -127,7 +130,8 @@ async function collectFunctionArgsFromChunks(
     OpenAI.Chat.Completions.ChatCompletionChunk,
     void,
     unknown
-  >
+  >,
+  setCurrentMessage: Dispatch<SetStateAction<string>>
 ) {
   let currentChunk = chunk;
 
@@ -141,13 +145,23 @@ async function collectFunctionArgsFromChunks(
     toast.error(msg);
     return { error: msg, requestedTools: {} };
   }
-  currentId = processChunk(chunk, requestedTools, currentId);
+  currentId = processToolCallChunk(
+    chunk,
+    requestedTools,
+    currentId,
+    setCurrentMessage
+  );
 
   for await (currentChunk of stream) {
     if (currentChunk.choices[0].finish_reason === "tool_calls") {
       continue;
     }
-    currentId = processChunk(currentChunk, requestedTools, currentId);
+    currentId = processToolCallChunk(
+      currentChunk,
+      requestedTools,
+      currentId,
+      setCurrentMessage
+    );
   }
   return { error: undefined, requestedTools };
 }
