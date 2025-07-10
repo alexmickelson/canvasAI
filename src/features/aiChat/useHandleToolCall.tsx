@@ -10,13 +10,11 @@ import toast from "react-hot-toast";
 export function useHandleToolCall({
   tools,
   setMessages,
-  cancelStream,
 }: {
   tools: AiTool[];
   setMessages: React.Dispatch<
     React.SetStateAction<ChatCompletionMessageParam[]>
   >;
-  cancelStream: () => void;
 }) {
   const executeToolCalls = useCallback(
     async (
@@ -90,11 +88,10 @@ export function useHandleToolCall({
       );
       if (error) return chunk;
       const results = await executeToolCalls(requestedTools);
-      setMessages((prev) => [...prev.slice(0, -1), ...results]);
-      cancelStream();
+      setMessages((prev) => [...prev, ...results]);
       return chunk;
     },
-    [cancelStream, executeToolCalls, setMessages]
+    [executeToolCalls, setMessages]
   );
 }
 

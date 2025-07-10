@@ -13,6 +13,7 @@ import toast from "react-hot-toast";
 import { useHandleToolCall } from "./useHandleToolCall";
 import { useTRPCClient } from "../../server/trpc/trpcClient";
 import type { AiTool } from "../../utils/createAiTool";
+import { handleIncomingTextChunk } from "./handleIncomingTextChunk";
 
 interface AiChatContextType {
   messages: ChatCompletionMessageParam[];
@@ -52,7 +53,6 @@ export const AiChatProvider = ({
   const handleToolCall = useHandleToolCall({
     tools,
     setMessages,
-    cancelStream,
   });
 
   useEffect(() => {
@@ -93,15 +93,7 @@ export const AiChatProvider = ({
           signal: ac.signal,
         }
       );
-
       setStream(newStream);
-
-      const latestMessage: ChatCompletionMessageParam = {
-        role: "assistant",
-        content: "",
-        // name: "assistant",
-      };
-      setMessages((prev) => [...prev, latestMessage]);
 
       for await (let chunk of newStream) {
         console.log(chunk);
@@ -112,15 +104,9 @@ export const AiChatProvider = ({
             chunk.choices[0].finish_reason === "tool_calls");
 
         if (isToolCall) {
-          // console.log("tool call detected in chunk:", chunk);
           chunk = await handleToolCall(chunk, newStream);
         } else if (chunk.choices[0]) {
-          latestMessage.content += chunk.choices[0].delta.content || "";
-          setMessages((prev) => {
-            const updatedMessages = [...prev];
-            updatedMessages[updatedMessages.length - 1] = latestMessage;
-            return updatedMessages;
-          });
+          chunk = await handleIncomingTextChunk(chunk, newStream, setMessages);
         }
 
         if (chunk.choices?.[0]?.finish_reason) {

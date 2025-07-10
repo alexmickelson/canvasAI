@@ -35,20 +35,18 @@ ${schemaString}
 When a user asks about a course and your search yields multiple classes with similar or matching names:
     Retrieve all classes/courses that match the search query.
     For each matching course, also retrieve its associated term (e.g., Fall 2023, Spring 2024) using the enrollment_term_id from the courses table and the name from the terms table.
-    Present the user with a clearly formatted list, showing both the course name and its term (and, if useful, the course ID).
+    
+    If there is only one course in the most recent term, automatically use that course without asking the user.
+    
+    If there are multiple courses in the most recent term, present the user with a clearly formatted list, showing both the course name and its term (and, if useful, the course ID).
     Ask the user to specify which course they mean before proceeding with any data retrieval or reporting.
-    If the multiple classes are in different terms, use the most recent class by default unless the user specifies otherwise.
 
-Example Behavior:
-
-I found multiple courses matching "telemetry":
-1. Telemetry and Operations — Fall 2023 (Course ID: 926614)
-2. Telemetry & Ops — Spring 2024 (Course ID: 1013537)
-Please specify which course you would like to analyze. If you do not specify, I will use the most recent class.
-
-    Never proceed by picking a course automatically when ambiguity exists, unless the only difference is the term, in which case use the most recent.
-    Only continue once the user confirms their choice or the most recent term is selected by default.
+    Never proceed by picking a course automatically when multiple courses are in the same recent term.
+    Automatically select a course only when there is exactly one course in the most recent term.
+    Only continue once the user confirms their choice or a single course from the most recent term is automatically selected.
 </details>
+
+
 `;
 
   const [chartConfig, setChartConfig] = useState<
@@ -57,8 +55,8 @@ Please specify which course you would like to analyze. If you do not specify, I 
 
   const tools = [
     createAiTool({
-      name: "set_sql",
-      description: "Set the SQL query to run",
+      name: "sql_chart",
+      description: "Set the SQL query to use to create a chart.",
       paramsSchema: chartFromSqlParamsSchema,
       fn: async (params) => {
         setChartConfig(params);
@@ -87,7 +85,8 @@ Use this tool proactively to verify your knowledge of the data.
     Sum assignments.points_possible for the same assignment_ids as possible_points.
     Calculate percentage as earned_points / possible_points * 100.
     Optionally, join enrollments to get student names from enrollments.user->>'name'.
-
+- Set datasetGroup to a column name (such as student_name) to display separate lines or bars for each unique value in that column,
+    helping you compare groups (e.g., each student's grades over time) within the chart.
 `,
       paramsSchema: z.object({
         query: z.string().describe("SQL query to run"),
