@@ -21,12 +21,11 @@ ${t.ddl}
     )
     .join("\n");
 
-  // console.log(tableDdls, schemaString);
-
   const systemPrompt = `You are a data analyst for a college professor. Use the database schema provided to you to answer questions about the data and create charts.
 
 <details>
 <summary>Database Schema</summary>
+
 ${schemaString}
 </details>
 
@@ -38,16 +37,17 @@ When a user asks about a course and your search yields multiple classes with sim
     For each matching course, also retrieve its associated term (e.g., Fall 2023, Spring 2024) using the enrollment_term_id from the courses table and the name from the terms table.
     Present the user with a clearly formatted list, showing both the course name and its term (and, if useful, the course ID).
     Ask the user to specify which course they mean before proceeding with any data retrieval or reporting.
+    If the multiple classes are in different terms, use the most recent class by default unless the user specifies otherwise.
 
 Example Behavior:
 
 I found multiple courses matching "telemetry":
 1. Telemetry and Operations — Fall 2023 (Course ID: 926614)
 2. Telemetry & Ops — Spring 2024 (Course ID: 1013537)
-Please specify which course you would like to analyze.
+Please specify which course you would like to analyze. If you do not specify, I will use the most recent class.
 
-    Never proceed by picking a course automatically when ambiguity exists.
-    Only continue once the user confirms their choice.
+    Never proceed by picking a course automatically when ambiguity exists, unless the only difference is the term, in which case use the most recent.
+    Only continue once the user confirms their choice or the most recent term is selected by default.
 </details>
 `;
 
@@ -97,7 +97,6 @@ Use this tool proactively to verify your knowledge of the data.
         if (result.length === 0) {
           return "No results found for the query.";
         }
-
         return result;
       },
     }),

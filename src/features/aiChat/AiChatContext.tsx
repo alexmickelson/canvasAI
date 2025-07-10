@@ -83,7 +83,6 @@ export const AiChatProvider = ({
             }),
           },
         }));
-      console.log("toolsSchema", toolsSchema);
 
       const newStream = await client.ai.streamOpenAi.mutate(
         {
@@ -104,7 +103,7 @@ export const AiChatProvider = ({
       };
       setMessages((prev) => [...prev, latestMessage]);
 
-      for await (const chunk of newStream) {
+      for await (let chunk of newStream) {
         console.log(chunk);
 
         const isToolCall =
@@ -114,7 +113,7 @@ export const AiChatProvider = ({
 
         if (isToolCall) {
           // console.log("tool call detected in chunk:", chunk);
-          await handleToolCall(chunk);
+          chunk = await handleToolCall(chunk, newStream);
         } else if (chunk.choices[0]) {
           latestMessage.content += chunk.choices[0].delta.content || "";
           setMessages((prev) => {

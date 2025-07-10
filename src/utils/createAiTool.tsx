@@ -23,10 +23,19 @@ export function createAiTool<T>({
     description,
     paramsSchema,
     fn: async (params: string): Promise<string> => {
-      const parsedParams = paramsSchema.parse(JSON.parse(params));
-      const result = await fn(parsedParams);
-      if (typeof result === "string") return result;
-      else return JSON.stringify(result);
+      try {
+        const parsedParams = paramsSchema.parse(JSON.parse(params));
+        const result = await fn(parsedParams);
+        if (typeof result === "string") return result;
+        else return JSON.stringify(result);
+      } catch (error) {
+        console.error("Error running tool:", error);
+        return `Error: ${
+          typeof error === "object" && error && "message" in error
+            ? (error as { message: string }).message
+            : String(error)
+        }`;
+      }
     },
   };
 }

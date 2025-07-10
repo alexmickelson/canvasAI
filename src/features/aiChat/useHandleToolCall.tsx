@@ -1,7 +1,11 @@
 import type OpenAI from "openai";
-import type { ChatCompletionMessageParam } from "openai/resources/index.mjs";
-import { useCallback, useRef } from "react";
+import type {
+  ChatCompletionChunk,
+  ChatCompletionMessageParam,
+} from "openai/resources/index.mjs";
+import { useCallback } from "react";
 import type { AiTool } from "../../utils/createAiTool";
+import toast from "react-hot-toast";
 
 export function useHandleToolCall({
   tools,
@@ -14,126 +18,139 @@ export function useHandleToolCall({
   >;
   cancelStream: () => void;
 }) {
-  const paramsRef = useRef<
-    Record<
-      string,
-      {
-        chunks: OpenAI.Chat.Completions.ChatCompletionChunk[];
-        functionName: string;
-        message: OpenAI.Chat.Completions.ChatCompletionChunk.Choice.Delta;
-      }
-    >
-  >({});
+  const executeToolCalls = useCallback(
+    async (
+      requestedTools: Record<string, { args: string; functionName: string }>
+    ) => {
+      const results = await Promise.all(
+        Object.entries(requestedTools).map(
+          async ([toolId, { args, functionName }]): Promise<
+            ChatCompletionMessageParam[]
+          > => {
+            const chosenTool = tools.find((tool) => tool.name === functionName);
+            if (!chosenTool) {
+              console.error("Tool not found:", functionName);
+              return [];
+            }
+            try {
+              const result = await chosenTool.fn(args);
 
-  const executeToolCall = useCallback(
-    async (toolId: string) => {
-      const toolFunctionName = paramsRef.current[toolId]?.functionName;
-      if (!toolFunctionName) {
-        console.error(
-          "Tool function name is missing for toolId:",
-          toolId,
-          paramsRef.current[toolId]
-        );
-        return;
-      }
-      const chosenTool = tools.find((tool) => tool.name === toolFunctionName);
-      if (!chosenTool) {
-        console.error("Tool not found:", toolFunctionName);
-        return;
-      }
-      const toolRecord = paramsRef.current[toolId];
-      if (!toolRecord) {
-        console.error(
-          "No chunks provided for tool call",
-          toolId,
-          toolFunctionName
-        );
-        return;
-      }
-      try {
-        const paramsString = toolRecord.chunks
-          .filter(
-            (c) => c.choices[0].delta.tool_calls?.[0]?.function?.arguments
-          )
-          .map((c) => c.choices[0].delta.tool_calls?.[0]?.function?.arguments)
-          .join("");
-        console.log("calling with params", paramsString);
-        const result = await chosenTool.fn(paramsString);
+              const toolRequestMessage: ChatCompletionMessageParam = {
+                role: "assistant",
+                tool_calls: [
+                  {
+                    id: toolId,
+                    type: "function",
+                    function: {
+                      name: chosenTool.name,
+                      arguments: args,
+                    },
+                  },
+                ],
+              };
 
-        console.log("tool result:", result);
+              const toolMessage: ChatCompletionMessageParam = {
+                role: "tool",
+                content: result,
+                tool_call_id: toolId,
+              };
+              return [toolRequestMessage, toolMessage];
+            } catch (error) {
+              console.error("Error executing tool function:", error);
+              toast.error(
+                `Error executing tool function ${functionName}: ${
+                  typeof error === "object" && error && "message" in error
+                    ? (error as { message: string }).message
+                    : String(error)
+                }`
+              );
+              throw error;
+            }
+          }
+        )
+      );
 
-        const toolRequestMessage: ChatCompletionMessageParam = {
-          role: "assistant",
-          tool_calls: [
-            {
-              id: toolId,
-              type: "function",
-              function: {
-                name: chosenTool.name,
-                arguments: paramsString,
-              },
-            },
-          ],
-        };
-
-        // Send the tool result back to the LLM as a tool message
-        const toolMessage: ChatCompletionMessageParam = {
-          role: "tool",
-          content: result,
-          tool_call_id: toolId,
-        };
-        setMessages((prev) => [
-          ...prev.slice(0, -1),
-          toolRequestMessage,
-          toolMessage,
-        ]);
-        cancelStream();
-        // Clear the aggregated params for this tool call
-        delete paramsRef.current[toolId];
-      } catch (error) {
-        console.error("Error executing tool function:", error);
-      }
+      return results.flat();
     },
-    [cancelStream, setMessages, tools]
+    [tools]
   );
 
   return useCallback(
-    async function handleToolCall(
-      chunk: OpenAI.Chat.Completions.ChatCompletionChunk
-    ) {
-      const toolCall = chunk.choices[0].delta.tool_calls?.[0];
-      const finishReason = chunk.choices[0].finish_reason;
-      if (finishReason === "tool_calls") {
-        await executeToolCall(chunk.id);
-        return;
-      }
-
-      if (!toolCall) {
-        console.error("Tool call is missing in chunk:", chunk);
-        return;
-      }
-      // if is first call...
-      if (!paramsRef.current[chunk.id]) {
-        if (toolCall.function?.name) {
-          paramsRef.current[chunk.id] = {
-            chunks: [],
-            functionName: toolCall.function.name,
-            message: chunk.choices[0].delta,
-          };
-        } else {
-          console.error(
-            "Tool call function name is missing, cannot create params aggregation object for first streamed response",
-            toolCall
-          );
-          return;
-        }
-      }
-      if (chunk.id) {
-        paramsRef.current[chunk.id].chunks.push(chunk);
-      } else {
-        console.error("Tool call is missing or has no id:", chunk);
-      }
+    async function (
+      chunk: OpenAI.Chat.Completions.ChatCompletionChunk,
+      stream: AsyncIterable<
+        OpenAI.Chat.Completions.ChatCompletionChunk,
+        void,
+        unknown
+      >
+    ): Promise<ChatCompletionChunk> {
+      const { error, requestedTools } = await collectFunctionArgsFromChunks(
+        chunk,
+        stream
+      );
+      if (error) return chunk;
+      const results = await executeToolCalls(requestedTools);
+      setMessages((prev) => [...prev.slice(0, -1), ...results]);
+      cancelStream();
+      return chunk;
     },
-    [executeToolCall]
+    [cancelStream, executeToolCalls, setMessages]
   );
+}
+
+function processChunk(
+  chunk: OpenAI.Chat.Completions.ChatCompletionChunk,
+  requestedTools: Record<string, { args: string; functionName: string }>,
+  currentId: string
+): string {
+  const toolCall = chunk.choices[0].delta.tool_calls?.[0];
+  if (!toolCall) return currentId;
+
+  if (toolCall.id) {
+    console.log(
+      "new tool call detected:",
+      toolCall.id,
+      toolCall.function?.name
+    );
+    requestedTools[toolCall.id] = {
+      args: "",
+      functionName: toolCall.function?.name ?? "",
+    };
+    return toolCall.id;
+  }
+
+  const newArgs = toolCall.function?.arguments ?? "";
+  requestedTools[currentId].args += newArgs;
+  return currentId;
+}
+
+async function collectFunctionArgsFromChunks(
+  chunk: OpenAI.Chat.Completions.ChatCompletionChunk,
+  stream: AsyncIterable<
+    OpenAI.Chat.Completions.ChatCompletionChunk,
+    void,
+    unknown
+  >
+) {
+  let currentChunk = chunk;
+
+  const requestedTools: Record<string, { args: string; functionName: string }> =
+    {};
+
+  let currentId = chunk.choices[0].delta.tool_calls?.[0].id;
+  if (!currentId) {
+    const msg = "Tool call ID is missing in chunk, cannot handle tool call";
+    console.error(msg, chunk);
+    toast.error(msg);
+    return { error: msg, requestedTools: {} };
+  }
+  currentId = processChunk(chunk, requestedTools, currentId);
+
+  for await (currentChunk of stream) {
+    if (currentChunk.choices[0].finish_reason === "tool_calls") {
+      continue;
+    }
+    currentId = processChunk(currentChunk, requestedTools, currentId);
+  }
+  return { error: undefined, requestedTools };
 }
