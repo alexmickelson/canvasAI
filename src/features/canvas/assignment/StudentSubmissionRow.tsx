@@ -38,16 +38,7 @@ export const StudentSubmissionRow: FC<{
         {percent != null ? `${percent}%` : "N/A"}{" "}
         <span className="text-slate-400"> points</span>
       </p>
-      <p className=" text-gray-400">
-        {submission.submitted_at
-          ? new Date(submission.submitted_at).toLocaleString(undefined, {
-              weekday: "long",
-              hour: "2-digit",
-              minute: "2-digit",
-            })
-          : "N/A"}
-      </p>
-      <p className=" ">
+      <p className="text-slate-400 ">
         {submission.submitted_at &&
           assignment.due_at &&
           describeTimeDifference(submission.submitted_at, assignment.due_at)}

@@ -59,38 +59,37 @@ const InnerAssignmentPage: FC<{ assignmentId: number }> = ({
               }}
             />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 max-h-[500px] flex justify-center">
             {selectedSnapshot && (
               <ChartFromSql
                 sql={`
                   SELECT
-                    s.id,
-                    s.score,
-                    a.points_possible,
                     CASE
-                      WHEN s.score IS NOT NULL AND a.points_possible IS NOT NULL AND a.points_possible > 0
-                      THEN ROUND((s.score / a.points_possible) * 100, 1)
-                      ELSE NULL
-                    END AS percent_score,
-                    s.user_id,
-                    e.user->>'name' AS student_name
+                      WHEN s.score IS NOT NULL AND a.points_possible IS NOT NULL AND a.points_possible > 0 AND ROUND((s.score / a.points_possible) * 100, 1) < 60 THEN '0-59'
+                      WHEN s.score IS NOT NULL AND a.points_possible IS NOT NULL AND a.points_possible > 0 AND ROUND((s.score / a.points_possible) * 100, 1) < 80 THEN '60-79'
+                      WHEN s.score IS NOT NULL AND a.points_possible IS NOT NULL AND a.points_possible > 0 THEN '80-100'
+                      ELSE 'N/A'
+                    END AS score_bucket,
+                    COUNT(*) AS student_count
                   FROM submissions s
                     JOIN assignments a ON s.assignment_id = a.id
                     JOIN enrollments e ON s.user_id = e.user_id AND a.course_id = e.course_id
                   WHERE s.assignment_id = $<assignmentId>
                     AND s.sync_job_id = $<snapshotId>
                     AND s.score IS NOT NULL
+                  GROUP BY score_bucket
+                  ORDER BY score_bucket
                 `}
                 parameters={{
                   assignmentId: assignmentId,
                   snapshotId: selectedSnapshot.id,
                 }}
-                chartType="bar"
-                xField="student_name"
-                yField="percent_score"
-                title="Assignment Score Ratio (%)"
-                xLabel="Student Name"
-                yLabel="Score (%)"
+                chartType="pie"
+                xField="score_bucket"
+                yField="student_count"
+                title="Assignment Score Buckets"
+                xLabel="Score Bucket"
+                yLabel="Student Count"
               />
             )}
           </div>

@@ -11,7 +11,7 @@ export const chartFromSqlParamsSchema = z.object({
     .describe(
       "SQL query to fetch data for the chart, when using parameters, use the format: SELECT * FROM table WHERE column = $<parameterName>"
     ),
-  chartType: z.enum(["bar", "line", "scatter"]),
+  chartType: z.enum(["bar", "line", "scatter", "pie"]), // Added pie
   xField: z.string(),
   yField: z.string(),
   title: z.string(),
@@ -76,6 +76,19 @@ export const ChartFromSql = ({
   ];
 
   const createDatasets = () => {
+    if (chartType === "pie") {
+      return [
+        {
+          label: yField,
+          data: rows.map((row) => row[yField]) || [],
+          backgroundColor: borderPalette
+            .slice(0, rows.length)
+            .map((c) => c.replace("1)", "0.7)")),
+          borderColor: borderPalette.slice(0, rows.length),
+          borderWidth: 1,
+        },
+      ];
+    }
     if (datasetGroup) {
       const groupedData: Record<string, Record<string, unknown>[]> =
         rows.reduce((acc, row) => {
@@ -122,9 +135,12 @@ export const ChartFromSql = ({
     }
   };
 
-  const labels = datasetGroup
-    ? getUniqueLabels(rows, xField)
-    : rows.map((row) => row[xField]);
+  const labels =
+    chartType === "pie"
+      ? rows.map((row) => row[xField])
+      : datasetGroup
+      ? getUniqueLabels(rows, xField)
+      : rows.map((row) => row[xField]);
 
   const chartConfig: ChartConfiguration = {
     type: chartType,
@@ -149,6 +165,8 @@ export const ChartFromSql = ({
               },
               y: yLabel ? { title: { display: true, text: yLabel } } : {},
             }
+          : chartType === "pie"
+          ? {} // No axes for pie chart
           : {
               x: xLabel ? { title: { display: true, text: xLabel } } : {},
               y: yLabel ? { title: { display: true, text: yLabel } } : {},
