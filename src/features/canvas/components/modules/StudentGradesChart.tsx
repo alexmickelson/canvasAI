@@ -13,7 +13,7 @@ export const StudentGradesForModuleChart: FC<{
   const { data: submissionsByAssignment } = useSuspenseQuery(
     trpc.canvas.moduleSubmissions.queryOptions({
       moduleId,
-      syncJobId: selectedSnapshot?.id,
+      snapshotId: selectedSnapshot?.id,
     })
   );
 

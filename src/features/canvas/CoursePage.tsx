@@ -2,6 +2,7 @@ import { useSearchParams } from "react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "../../server/trpc/trpcClient";
 import { CanvasCourseComponent } from "./components/CanvasCourseComponent";
+import { SnapshotProvider } from "./snapshot/SnapshotContext";
 
 const CoursePage = () => {
   const [searchParams] = useSearchParams();
@@ -26,8 +27,10 @@ const CoursePage = () => {
 
   return (
     <div>
-      <h1>Course Page</h1>
-      <CanvasCourseComponent course={course} />
+      <SnapshotProvider>
+        <h1>Course Page</h1>
+        <CanvasCourseComponent course={course} />
+      </SnapshotProvider>
     </div>
   );
 };

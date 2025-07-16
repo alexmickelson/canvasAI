@@ -14,7 +14,7 @@ export const AssignmentGradesChart: FC<{
   const { data: submissions } = useSuspenseQuery(
     trpc.canvas.assignmentSubmissions.queryOptions({
       assignmentId: assignment.id,
-      syncJobId: selectedSnapshot?.id,
+      snapshotId: selectedSnapshot?.id,
     })
   );
 

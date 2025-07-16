@@ -88,7 +88,7 @@ async function getAllEnrollmentsInCourse(
 
 export async function storeEnrollmentInDatabase(
   enrollment: CanvasEnrollment,
-  syncJobId: number
+  snapshotId: number
 ) {
   const validated = CanvasEnrollmentSchema.parse(enrollment);
   await db.none(
@@ -226,37 +226,36 @@ export async function storeEnrollmentInDatabase(
       original_record = excluded.original_record`,
     {
       ...validated,
-      sync_job_id: syncJobId,
+      sync_job_id: snapshotId,
       json: enrollment,
     }
   );
 }
 
-
 export async function getEnrollmentsFromDatabaseByCourseId(
   courseId: number,
-  syncJobId?: number
+  snapshotId?: number
 ): Promise<CanvasEnrollment[]> {
-  const latestSyncId = syncJobId ? syncJobId : (await getLatestSyncJob()).id;
+  const latestSyncId = snapshotId ? snapshotId : (await getLatestSyncJob()).id;
   const rows = await db.any(
     `select * 
       from enrollments 
       where course_id = $<courseId> 
-        and sync_job_id = $<syncJobId>
+        and sync_job_id = $<snapshotId>
     `,
-    { courseId, syncJobId: latestSyncId }
+    { courseId, snapshotId: latestSyncId }
   );
   return rows.map((row) => CanvasEnrollmentSchema.parse(row.json));
 }
 
 export async function syncEnrollmentsForCourse(
   courseId: number,
-  syncJobId: number
+  snapshotId: number
 ) {
   const enrollments = await getAllEnrollmentsInCourse(courseId);
   await Promise.all(
     enrollments.map(async (enrollment) => {
-      await storeEnrollmentInDatabase(enrollment, syncJobId);
+      await storeEnrollmentInDatabase(enrollment, snapshotId);
     })
   );
 }

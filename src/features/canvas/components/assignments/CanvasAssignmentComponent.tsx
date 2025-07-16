@@ -14,6 +14,7 @@ import {
   BarController,
 } from "chart.js";
 import { AssignmentGradesChart } from "./AssignmentGradesChart";
+import { Link } from "react-router";
 
 ChartJS.register(
   CategoryScale,
@@ -57,6 +58,7 @@ export const CanvasAssignmentComponent: FC<{
           <p className=" text-gray-400">{assignment.points_possible} points</p>
         </div>
         <div>
+          <Link to={`/assignment/${assignment.id}`}>Go to Assignment</Link>
           <button
             className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
             onClick={() => setShowSubmissions(!showSubmissions)}
@@ -138,19 +140,17 @@ function SubmissionTimeDisplay({
         <>
           {days && (
             <>
-              <span>{days}</span>{" "}
-              <span className="text-gray-400">days</span>
+              <span>{days}</span> <span className="text-gray-400">days</span>
               {hours !== 0 || minutes !== 0 ? ", " : " "}
             </>
-            )}
-            {hours && (
+          )}
+          {hours && (
             <>
-              <span>{hours}</span>{" "}
-              <span className="text-gray-400">hours</span>
+              <span>{hours}</span> <span className="text-gray-400">hours</span>
               {minutes !== 0 ? ", " : " "}
             </>
-            )}
-            {minutes && (
+          )}
+          {minutes && (
             <>
               <span>{minutes}</span>{" "}
               <span className="text-gray-400">minutes</span>{" "}
@@ -174,8 +174,10 @@ function getSubmissionTiming(submittedAt: string, dueAt: string) {
 
   // Remove leading 0s
   if (diffDays === 0) diffDays = undefined as unknown as number;
-  if (diffDays === undefined && diffHours === 0) diffHours = undefined as unknown as number;
-  if (diffDays === undefined && diffHours === undefined && diffMinutes === 0) diffMinutes = undefined as unknown as number;
+  if (diffDays === undefined && diffHours === 0)
+    diffHours = undefined as unknown as number;
+  if (diffDays === undefined && diffHours === undefined && diffMinutes === 0)
+    diffMinutes = undefined as unknown as number;
 
   const lateOrEarly = diffMs > 0 ? "late" : "early";
 

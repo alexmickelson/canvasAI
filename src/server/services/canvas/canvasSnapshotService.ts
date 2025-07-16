@@ -79,7 +79,7 @@ export async function createSyncJob(jobName: string): Promise<SyncJob> {
      RETURNING *`,
     { jobName, status: "started" }
   );
-  return result[0];
+  return SyncJobSchema.parse(result[0]);
 }
 
 export async function updateSyncJobStatus(
@@ -87,27 +87,21 @@ export async function updateSyncJobStatus(
   status: SyncJobStatus,
   errorMessage: string | null = null
 ): Promise<SyncJob> {
-  if (status === "completed") {
-    const result = await db.any<SyncJob>(
-      `UPDATE sync_job
-        SET 
-          status = $<status>,
-          completed_at = NOW()
-        WHERE id = $<jobId>
-        RETURNING *`,
-      { jobId, status, errorMessage }
-    );
-    return result[0];
-  } else {
-    const result = await db.any<SyncJob>(
-      `UPDATE sync_job
-        SET status = $<status>
-        WHERE id = $<jobId>
-        RETURNING *`,
-      { jobId, status, errorMessage }
-    );
-    return result[0];
-  }
+  const sql =
+    status === "completed"
+      ? `UPDATE sync_job
+          SET 
+            status = $<status>,
+            completed_at = NOW()
+          WHERE id = $<jobId>
+          RETURNING *`
+      : `UPDATE sync_job
+          SET status = $<status>
+          WHERE id = $<jobId>
+          RETURNING *`;
+
+  const result = await db.any<SyncJob>(sql, { jobId, status, errorMessage });
+  return SyncJobSchema.parse(result[0]);
 }
 
 export async function setJobMessage(
@@ -121,14 +115,14 @@ export async function setJobMessage(
         RETURNING *`,
     { jobId, message }
   );
-  return result[0];
+  return SyncJobSchema.parse(result[0]);
 }
 
 export async function listAllSyncJobs(): Promise<SyncJob[]> {
   const result = await db.any<SyncJob>(
     `SELECT * FROM sync_job ORDER BY started_at DESC`
   );
-  return result;
+  return result.map((row) => SyncJobSchema.parse(row));
 }
 
 export async function getLatestSyncJob(): Promise<SyncJob> {

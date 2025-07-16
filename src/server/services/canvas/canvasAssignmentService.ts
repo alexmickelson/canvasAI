@@ -35,7 +35,7 @@ async function getAllAssignmentsInCourse(
 
 async function storeAssignmentInDatabase(
   assignment: CanvasAssignment,
-  syncJobId: number
+  snapshotId: number
 ) {
   await db.none(
     `insert into assignments (
@@ -66,36 +66,51 @@ async function storeAssignmentInDatabase(
       original_record = excluded.original_record`,
     {
       ...CanvasAssignmentSchema.parse(assignment),
-      sync_job_id: syncJobId,
+      sync_job_id: snapshotId,
       json: assignment,
     }
   );
 }
 export async function getAssignmentsFromDatabaseByCourseId(
   courseId: number,
-  syncJobId?: number
+  snapshotId?: number
 ): Promise<CanvasAssignment[]> {
-  const latestSyncId = syncJobId ? syncJobId : (await getLatestSyncJob()).id;
+  const latestSyncId = snapshotId ? snapshotId : (await getLatestSyncJob()).id;
   const rows = await db.any(
     `select original_record as json
       from assignments
       where course_id = $<courseId>
-        and sync_job_id = $<syncJobId>
+        and sync_job_id = $<snapshotId>
       order by due_date asc`,
-    { courseId, syncJobId: latestSyncId }
+    { courseId, snapshotId: latestSyncId }
   );
   return rows.map((row) => row.json);
+}
+export async function getAssignmentsFromDatabaseByAssignmentId(
+  assignmentId: number,
+  snapshotId?: number
+): Promise<CanvasAssignment> {
+  const latestSyncId = snapshotId ? snapshotId : (await getLatestSyncJob()).id;
+  const rows = await db.any(
+    `select original_record as json
+      from assignments
+      where id = $<assignmentId>
+        and sync_job_id = $<snapshotId>
+      order by due_date asc`,
+    { assignmentId, snapshotId: latestSyncId }
+  );
+  return rows.map((row) => row.json)[0];
 }
 
 export async function syncAssignmentsAndSubmissionsForCourse(
   courseId: number,
-  syncJobId: number
+  snapshotId: number
 ) {
   const assignments = await getAllAssignmentsInCourse(courseId);
   await Promise.all(
     assignments.map(async (assignment) => {
-      await storeAssignmentInDatabase(assignment, syncJobId);
-      await syncSubmissionsForAssignment(assignment.id, courseId, syncJobId);
+      await storeAssignmentInDatabase(assignment, snapshotId);
+      await syncSubmissionsForAssignment(assignment.id, courseId, snapshotId);
     })
   );
 }

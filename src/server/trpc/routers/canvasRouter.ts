@@ -5,7 +5,10 @@ import {
   CanvasCourseSchema,
 } from "../../services/canvas/canvasCourseService";
 import { publicProcedure } from "../utils/trpc";
-import { getAssignmentsFromDatabaseByCourseId } from "../../services/canvas/canvasAssignmentService";
+import {
+  getAssignmentsFromDatabaseByAssignmentId,
+  getAssignmentsFromDatabaseByCourseId,
+} from "../../services/canvas/canvasAssignmentService";
 import {
   getTermsFromDatabase,
   syncTerms,
@@ -34,23 +37,24 @@ export const canvasRouter = {
     }),
 
   assignments: publicProcedure
-    .input(z.object({ courseId: z.number(), syncJobId: z.number().optional() }))
+    .input(
+      z.object({ courseId: z.number(), snapshotId: z.number().optional() })
+    )
     .query(({ input }) =>
-      getAssignmentsFromDatabaseByCourseId(input.courseId, input.syncJobId)
+      getAssignmentsFromDatabaseByCourseId(input.courseId, input.snapshotId)
     ),
 
   assignment: publicProcedure
     .input(
-      z.object({ assignmentId: z.number(), syncJobId: z.number().optional() })
+      z.object({ assignmentId: z.number(), snapshotId: z.number().optional() })
     )
     .query(async ({ input }) => {
-      const assignments = await getAssignmentsFromDatabaseByCourseId(
+      const assignment = await getAssignmentsFromDatabaseByAssignmentId(
         input.assignmentId,
-        input.syncJobId
+        input.snapshotId
       );
-      return assignments.find(
-        (assignment) => assignment.id === input.assignmentId
-      );
+
+      return assignment;
     }),
 
   grabSnapshot: publicProcedure
@@ -72,44 +76,48 @@ export const canvasRouter = {
   }),
 
   modules: publicProcedure
-    .input(z.object({ courseId: z.number(), syncJobId: z.number().optional() }))
+    .input(
+      z.object({ courseId: z.number(), snapshotId: z.number().optional() })
+    )
     .query(async ({ input }) =>
-      getModulesFromDatabase(input.courseId, input.syncJobId)
+      getModulesFromDatabase(input.courseId, input.snapshotId)
     ),
 
   assignmentSubmissions: publicProcedure
     .input(
       z.object({
         assignmentId: z.number(),
-        syncJobId: z.coerce.number().optional(),
+        snapshotId: z.coerce.number().optional(),
       })
     )
     .query(async ({ input }) => {
       return await getSubmissionsFromDatabaseByAssignmentId(
         input.assignmentId,
-        input.syncJobId
+        input.snapshotId
       );
     }),
   moduleSubmissions: publicProcedure
     .input(
       z.object({
         moduleId: z.number(),
-        syncJobId: z.coerce.number().optional(),
+        snapshotId: z.coerce.number().optional(),
       })
     )
     .query(async ({ input }) => {
       return await getSubmissionsFromDatabaseByModuleId(
         input.moduleId,
-        input.syncJobId
+        input.snapshotId
       );
     }),
 
   enrollments: publicProcedure
-    .input(z.object({ courseId: z.number(), syncJobId: z.number().optional() }))
+    .input(
+      z.object({ courseId: z.number(), snapshotId: z.number().optional() })
+    )
     .query(async ({ input }) => {
       return await getEnrollmentsFromDatabaseByCourseId(
         input.courseId,
-        input.syncJobId
+        input.snapshotId
       );
     }),
 };

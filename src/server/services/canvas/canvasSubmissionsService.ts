@@ -35,7 +35,7 @@ async function getAllSubmissionsForAssignment(
 
 async function storeSubmissionInDatabase(
   submission: CanvasSubmission,
-  syncJobId: number
+  snapshotId: number
 ) {
   const validated = CanvasSubmissionSchema.parse(submission);
   await db.none(
@@ -89,16 +89,16 @@ async function storeSubmissionInDatabase(
       attempt: validated.attempt,
       late: validated.late,
       missing: validated.missing,
-      sync_job_id: syncJobId,
+      sync_job_id: snapshotId,
       json: submission,
     }
   );
 }
 export async function getSubmissionsFromDatabaseByAssignmentId(
   assignmentId: number,
-  syncJobId?: number
+  snapshotId?: number
 ): Promise<CanvasSubmission[]> {
-  const latestSyncId = syncJobId ? syncJobId : (await getLatestSyncJob()).id;
+  const latestSyncId = snapshotId ? snapshotId : (await getLatestSyncJob()).id;
   const rows = await db.any(
     `select 
         jsonb_set(
@@ -111,19 +111,19 @@ export async function getSubmissionsFromDatabaseByAssignmentId(
         inner join enrollments e
           on e.user_id = submissions.user_id and e.course_id = a.course_id and e.sync_job_id = submissions.sync_job_id
       where submissions.assignment_id = $<assignmentId>
-        and submissions.sync_job_id = $<syncJobId>`,
-    { assignmentId, syncJobId: latestSyncId }
+        and submissions.sync_job_id = $<snapshotId>`,
+    { assignmentId, snapshotId: latestSyncId }
   );
   return rows.map((row) => CanvasSubmissionSchema.parse(row.json));
 }
 
 export async function getSubmissionsFromDatabaseByModuleId(
   moduleId: number,
-  syncJobId?: number
+  snapshotId?: number
 ): Promise<
   { assignment: CanvasAssignment; submissions: CanvasSubmission[] }[]
 > {
-  const latestSyncId = syncJobId ? syncJobId : (await getLatestSyncJob()).id;
+  const latestSyncId = snapshotId ? snapshotId : (await getLatestSyncJob()).id;
   const assignmentSubmissions = await db.any(
     `SELECT 
       a.original_record AS assignment,
@@ -146,9 +146,9 @@ export async function getSubmissionsFromDatabaseByModuleId(
       INNER JOIN enrollments e
         ON e.course_id = a.course_id AND e.sync_job_id = a.sync_job_id
      WHERE m.id = $<moduleId>
-      and a.sync_job_id = $<syncJobId>
+      and a.sync_job_id = $<snapshotId>
      GROUP BY a.original_record`,
-    { moduleId, syncJobId: latestSyncId }
+    { moduleId, snapshotId: latestSyncId }
   );
   return assignmentSubmissions.map((row) => ({
     submissions: row.submissions.map((s: unknown) =>
@@ -161,7 +161,7 @@ export async function getSubmissionsFromDatabaseByModuleId(
 export async function syncSubmissionsForAssignment(
   assignmentId: number,
   courseId: number,
-  syncJobId: number
+  snapshotId: number
 ) {
   const submissions = await getAllSubmissionsForAssignment(
     assignmentId,
@@ -169,19 +169,19 @@ export async function syncSubmissionsForAssignment(
   );
   await Promise.all(
     submissions.map(async (submission) => {
-      await storeSubmissionInDatabase(submission, syncJobId);
+      await storeSubmissionInDatabase(submission, snapshotId);
     })
   );
 }
 
 export async function getSubmissionScoreAndClassAverage(
   submissionId: number,
-  syncJobId?: number
+  snapshotId?: number
 ): Promise<{
   userSubmission: CanvasSubmission | null;
   classAverage: number | null;
 }> {
-  const latestSyncId = syncJobId ? syncJobId : (await getLatestSyncJob()).id;
+  const latestSyncId = snapshotId ? snapshotId : (await getLatestSyncJob()).id;
   const result = await db.query(
     `SELECT 
       (
@@ -194,19 +194,19 @@ export async function getSubmissionScoreAndClassAverage(
         FROM submissions s
         INNER JOIN enrollments e
           (ON e.user_id = s.user_id 
-          AND e.course_id = (SELECT assignment_id FROM submissions WHERE id = $<submissionId> AND sync_job_id = $<syncJobId>)
+          AND e.course_id = (SELECT assignment_id FROM submissions WHERE id = $<submissionId> AND sync_job_id = $<snapshotId>)
           AND e.sync_job_id = s.sync_job_id)
         WHERE s.id = $<submissionId> 
-          AND s.sync_job_id = $<syncJobId>
+          AND s.sync_job_id = $<snapshotId>
         LIMIT 1
       ) AS user_submission,
       (
         SELECT COALESCE(AVG(score), 0) 
         FROM submissions 
-        WHERE assignment_id = (SELECT assignment_id FROM submissions WHERE id = $<submissionId> AND sync_job_id = $<syncJobId>) 
-          AND sync_job_id = $<syncJobId>
+        WHERE assignment_id = (SELECT assignment_id FROM submissions WHERE id = $<submissionId> AND sync_job_id = $<snapshotId>) 
+          AND sync_job_id = $<snapshotId>
       ) AS class_average`,
-    { submissionId, syncJobId: latestSyncId }
+    { submissionId, snapshotId: latestSyncId }
   );
 
   return {

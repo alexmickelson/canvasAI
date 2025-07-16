@@ -49,9 +49,9 @@ async function getAllModulesInCourse(
 export async function storeModuleInDatabase(
   module: CanvasModule,
   courseId: number,
-  syncJobId: number
+  snapshotId: number
 ) {
-  console.log("storing module in database", module.name, courseId, syncJobId);
+  console.log("storing module in database", module.name, courseId, snapshotId);
   const validated = CanvasModuleSchema.parse(module);
   await db.none(
     `insert into modules (
@@ -96,14 +96,14 @@ export async function storeModuleInDatabase(
       publish_final_grade: validated.publish_final_grade,
       published: validated.published,
       course_id: courseId,
-      sync_job_id: syncJobId,
+      sync_job_id: snapshotId,
       json: module,
     }
   );
 
   if (validated.items && validated.items.length > 0) {
     for (const item of validated.items) {
-      await storeModuleItemInDatabase(item, syncJobId);
+      await storeModuleItemInDatabase(item, snapshotId);
     }
   } else {
     console.log(
@@ -115,30 +115,30 @@ export async function storeModuleInDatabase(
 }
 export async function getModulesFromDatabase(
   courseId: number,
-  syncJobId?: number
+  snapshotId?: number
 ): Promise<CanvasModule[]> {
-  const latestSyncId = syncJobId ? syncJobId : (await getLatestSyncJob()).id;
+  const latestSyncId = snapshotId ? snapshotId : (await getLatestSyncJob()).id;
   const rows = await db.any<{ json: CanvasModule }>(
     `select original_record as json
      from modules
      where course_id = $<courseId>
-       and sync_job_id = $<syncJobId>
+       and sync_job_id = $<snapshotId>
      order by id`,
-    { courseId, syncJobId: latestSyncId }
+    { courseId, snapshotId: latestSyncId }
   );
   return rows.map((row) => row.json);
 }
 
 export async function syncModulesForCourse(
   courseId: number,
-  syncJobId: number
+  snapshotId: number
 ) {
-  console.log("requesting modules for course", courseId, syncJobId);
+  console.log("requesting modules for course", courseId, snapshotId);
   const modules = await getAllModulesInCourse(courseId);
   console.log("got modules from canvas", modules.length);
   await Promise.all(
     modules.map(async (module) => {
-      await storeModuleInDatabase(module, courseId, syncJobId);
+      await storeModuleInDatabase(module, courseId, snapshotId);
     })
   );
 }
@@ -155,7 +155,7 @@ export async function getAllModuleItemsInModule(
 
 export async function storeModuleItemInDatabase(
   item: CanvasModuleItem,
-  syncJobId?: number
+  snapshotId?: number
 ) {
   const validated = CanvasModuleItemSchema.parse(item);
   await db.none(
@@ -228,7 +228,7 @@ export async function storeModuleItemInDatabase(
       completion_requirement: validated.completion_requirement,
       content_details: validated.content_details,
       published: validated.published,
-      sync_job_id: syncJobId,
+      sync_job_id: snapshotId,
       json: item,
     }
   );

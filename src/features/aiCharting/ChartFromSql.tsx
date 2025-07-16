@@ -66,7 +66,6 @@ export const ChartFromSql = ({
 
   const createDatasets = () => {
     if (datasetGroup) {
-
       const groupedData: Record<string, Record<string, unknown>[]> =
         rows.reduce((acc, row) => {
           const groupValue = String(row[datasetGroup]);
@@ -99,29 +98,27 @@ export const ChartFromSql = ({
         };
       });
     } else {
-      return {
-        label: yField,
-        data: rows.map((row) => row[yField]) || [],
-        backgroundColor: borderPalette[0].replace("1)", "0.25)"),
-        borderColor: borderPalette[0],
-        borderWidth: 1,
-        showLine: chartType !== "scatter",
-      };
+      return [
+        {
+          label: yField,
+          data: rows.map((row) => row[yField]) || [],
+          backgroundColor: borderPalette[0].replace("1)", "0.25)"),
+          borderColor: borderPalette[0],
+          borderWidth: 1,
+          showLine: chartType !== "scatter",
+        },
+      ];
     }
   };
 
-  const createLabels = () => {
-    if (datasetGroup) {
-      return getUniqueLabels(rows, xField);
-    } else {
-      return rows.map((row) => row[xField]) || [];
-    }
-  };
+  const labels = datasetGroup
+    ? getUniqueLabels(rows, xField)
+    : rows.map((row) => row[xField]);
 
   const chartConfig: ChartConfiguration = {
     type: chartType,
     data: {
-      labels: createLabels(),
+      labels,
       // @ts-expect-error types are wrong
       datasets: createDatasets(),
     },
@@ -147,7 +144,7 @@ export const ChartFromSql = ({
             },
     },
   };
-  // console.log("chart config", chartConfig);
+  console.log("chart config", chartConfig);
 
   if (isLoading)
     return (
