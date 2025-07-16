@@ -18,11 +18,14 @@ db.$config.options.error = (err, e) => {
   }
 };
 
-export async function executeReadOnlySQL(sql: string) {
+export async function executeReadOnlySQL(
+  sql: string,
+  parameters: Record<string, unknown> | undefined
+) {
   const res = await db.tx(
     { mode: new pgp.txMode.TransactionMode({ readOnly: true }) },
     async (t) => {
-      return t.any(sql);
+      return t.any(sql, parameters ?? {});
     }
   );
 
@@ -45,7 +48,8 @@ export async function listDbSchema() {
   // For each table, get its DDL using a custom query
   const ddls = await Promise.all(
     tables.map(async (t) => {
-      const [{ ddl }] = await db.any(`
+      const [{ ddl }] = await db.any(
+        `
         SELECT 'CREATE TABLE ' || tablename || E' (\n' ||
           string_agg('  ' || column_name || ' ' || type || 
             CASE WHEN is_nullable = 'NO' THEN ' NOT NULL' ELSE '' END, E',\n') ||
@@ -66,7 +70,9 @@ export async function listDbSchema() {
             AND NOT a.attisdropped
         ) cols
         GROUP BY tablename
-      `, {tableName: t});
+      `,
+        { tableName: t }
+      );
       return { table: t, ddl };
     })
   );

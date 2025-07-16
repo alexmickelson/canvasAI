@@ -34,8 +34,32 @@ export const CanvasEnrollmentSchema = z.object({
   last_attended_at: z.string().nullable().optional().default(null),
   total_activity_time: z.number().nullable().optional().default(null),
   html_url: z.string().nullable().optional().default(null),
-  grades: z.record(z.unknown()).nullable().optional().default(null),
-  user: z.record(z.unknown()).nullable().optional().default(null),
+  grades: z
+    .object({
+      html_url: z.string(),
+      current_grade: z.string().nullable(),
+      current_score: z.number().nullable(),
+      final_grade: z.string().nullable(),
+      final_score: z.number().nullable(),
+      unposted_current_score: z.number().nullable(),
+      unposted_current_grade: z.string().nullable(),
+      unposted_final_score: z.number().nullable(),
+      unposted_final_grade: z.string().nullable(),
+    })
+    .nullable()
+    .optional()
+    .default(null),
+  user: z.object({
+    id: z.number(),
+    name: z.string(),
+    created_at: z.string(),
+    sortable_name: z.string(),
+    short_name: z.string(),
+    sis_user_id: z.string().nullable(),
+    integration_id: z.string().nullable(),
+    root_account: z.string(),
+    login_id: z.string(),
+  }),
   override_grade: z.string().nullable().optional().default(null),
   override_score: z.number().nullable().optional().default(null),
   unposted_current_grade: z.string().nullable().optional().default(null),
@@ -90,10 +114,12 @@ export async function storeEnrollmentInDatabase(
   enrollment: CanvasEnrollment,
   snapshotId: number
 ) {
-  const validated = CanvasEnrollmentSchema.parse(enrollment);
-  await db.none(
-    `insert into enrollments (
+  try {
+    const validated = CanvasEnrollmentSchema.parse(enrollment);
+    await db.none(
+      `insert into enrollments (
       id,
+      name,
       course_id,
       sis_course_id,
       course_integration_id,
@@ -138,6 +164,7 @@ export async function storeEnrollmentInDatabase(
       original_record
     ) values (
       $<id>,
+      $<name>,
       $<course_id>,
       $<sis_course_id>,
       $<course_integration_id>,
@@ -183,6 +210,7 @@ export async function storeEnrollmentInDatabase(
     ) on conflict (id) do update
     set 
       course_id = excluded.course_id,
+      name = excluded.name,
       sis_course_id = excluded.sis_course_id,
       course_integration_id = excluded.course_integration_id,
       course_section_id = excluded.course_section_id,
@@ -224,12 +252,17 @@ export async function storeEnrollmentInDatabase(
       current_period_unposted_final_grade = excluded.current_period_unposted_final_grade,
       sync_job_id = excluded.sync_job_id,
       original_record = excluded.original_record`,
-    {
-      ...validated,
-      sync_job_id: snapshotId,
-      json: enrollment,
-    }
-  );
+      {
+        ...validated,
+        name: validated.user?.name,
+        sync_job_id: snapshotId,
+        json: enrollment,
+      }
+    );
+  } catch (error) {
+    console.error("Error storing enrollment in database:", error, enrollment);
+    throw error;
+  }
 }
 
 export async function getEnrollmentsFromDatabaseByCourseId(
@@ -253,8 +286,10 @@ export async function syncEnrollmentsForCourse(
   snapshotId: number
 ) {
   const enrollments = await getAllEnrollmentsInCourse(courseId);
+
+  const withoutTestStudent = enrollments.filter(e => e.user.name !== "Test Student");
   await Promise.all(
-    enrollments.map(async (enrollment) => {
+    withoutTestStudent.map(async (enrollment) => {
       await storeEnrollmentInDatabase(enrollment, snapshotId);
     })
   );

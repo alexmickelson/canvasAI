@@ -35,23 +35,27 @@ export const AssignmentPageHeader: FC<{ assignmentId: number }> = ({
 
   return (
     <div className="flex justify-between p-3 gap-4 items-center">
-      {prevAssignment && (
-        <Link
-          to={`/assignment/${prevAssignment.id}`}
-          className="text-blue-400 hover:underline"
-        >
-          ← Previous: {prevAssignment.name}
-        </Link>
-      )}
-      <h1 className="">{assignment.name}</h1>
-      {nextAssignment && (
-        <Link
-          to={`/assignment/${nextAssignment.id}`}
-          className="text-blue-400 hover:underline"
-        >
-          Next: {nextAssignment.name} →
-        </Link>
-      )}
+      <div className="flex-shrink-1">
+        {prevAssignment && (
+          <Link
+            to={`/assignment/${prevAssignment.id}`}
+            className="text-blue-400 hover:underline"
+          >
+            ← Previous: {prevAssignment.name}
+          </Link>
+        )}
+      </div>
+      <h1 className="flex-1 text-center">{assignment.name}</h1>
+      <div className="flex-shrink-1 text-end">
+        {nextAssignment && (
+          <Link
+            to={`/assignment/${nextAssignment.id}`}
+            className="text-blue-400 hover:underline"
+          >
+            Next: {nextAssignment.name} →
+          </Link>
+        )}
+      </div>
     </div>
   );
 };

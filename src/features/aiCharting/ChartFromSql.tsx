@@ -6,7 +6,11 @@ import Spinner from "../../utils/Spinner";
 import { z } from "zod";
 
 export const chartFromSqlParamsSchema = z.object({
-  sql: z.string(),
+  sql: z
+    .string()
+    .describe(
+      "SQL query to fetch data for the chart, when using parameters, use the format: SELECT * FROM table WHERE column = $<parameterName>"
+    ),
   chartType: z.enum(["bar", "line", "scatter"]),
   xField: z.string(),
   yField: z.string(),
@@ -19,6 +23,12 @@ export const chartFromSqlParamsSchema = z.object({
     .describe(
       "sql column to group datasets by, grouping will cause different datasets to have differenc colors"
     ),
+  parameters: z
+    .record(z.any())
+    .optional()
+    .describe(
+      "Parameters for parameterized SQL queries, e.g. { assignmentId: 123 }"
+    ),
 });
 
 export const ChartFromSql = ({
@@ -30,10 +40,11 @@ export const ChartFromSql = ({
   xLabel,
   yLabel,
   datasetGroup,
+  parameters,
 }: z.infer<typeof chartFromSqlParamsSchema>) => {
   const trpc = useTRPC();
   const { data, isLoading } = useSuspenseQuery(
-    trpc.db.runSQL.queryOptions({ query: sql })
+    trpc.db.runSQL.queryOptions({ query: sql, parameters: parameters ?? {} })
   );
 
   const rows = data ?? [];

@@ -21,6 +21,7 @@
     "axios": "^1.10.0",
     "chart.js": "^4.5.0",
     "compression": "^1.8.0",
+    "dompurify": "^3.2.6",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "isbot": "^5.1.28",

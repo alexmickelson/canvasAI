@@ -117,6 +117,7 @@ CREATE TABLE module_items (
 
 CREATE TABLE enrollments (
   id BIGINT PRIMARY KEY,
+  name TEXT,
   course_id BIGINT REFERENCES courses(id),
   sis_course_id TEXT,
   course_integration_id TEXT,

@@ -7,10 +7,11 @@ export const dbRouter = {
     .input(
       z.object({
         query: z.string(),
+        parameters: z.record(z.any()).optional(),
       })
     )
     .query(async ({ input }) => {
-      const result = await executeReadOnlySQL(input.query);
+      const result = await executeReadOnlySQL(input.query, input.parameters);
       return result;
     }),
 
